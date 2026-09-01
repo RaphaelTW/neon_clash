@@ -128,6 +128,11 @@ const fighterFX={
   sable:{element:"hex",core:"#ffe7a1",glow:"#ff9f28"},
   dummy:{element:"metal",core:"#f0e4cc",glow:"#c64a3e"}
 };
+const prefersReducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+const coarsePointer=window.matchMedia?.("(hover: none) and (pointer: coarse)").matches;
+const deviceMemory=navigator.deviceMemory||8,logicalCores=navigator.hardwareConcurrency||8;
+const initialQuality=(prefersReducedMotion||deviceMemory<=4||logicalCores<=4)?"low":coarsePointer?"medium":"high";
+const perfLimits={high:{particles:320,afterImages:45,drawEvery:1,shadow:28},medium:{particles:190,afterImages:26,drawEvery:1,shadow:16},low:{particles:100,afterImages:12,drawEvery:2,shadow:6}};
 
 const state = {
   screen:"title", gameMode:"arcade", mode:"cpu", pick:"p1", p1Index:0, p2Index:1, arena:"neon",
@@ -137,6 +142,7 @@ const state = {
   finisherWindow:null, finisherUsed:false, lastTime:0, aiClock:0, previewTime:0,
   sound:true, volume:.70, screenShake:true, dynamicCamera:true,
   cinematic:0,hitStop:0,debugHitboxes:false,cameraZoom:1,
+  quality:initialQuality,frameIndex:0,slowFrames:0,
   menuIndex:0, arcade:{ladder:[],stage:0}, survivalScore:0, survivalHealth:100,
   survivalLastOpponent:-1, trainingResetTimer:0
 };
@@ -145,6 +151,8 @@ let P1=null,P2=null;
 const keys={};
 const inputBuffers={1:[],2:[]};
 const gamepadPrev={};
+const touchHeld=new Set();
+const touchPointers=new Map();
 
 class SynthAudio {
   constructor(){this.ctx=null}
@@ -965,6 +973,9 @@ function updateEffects(dt){
     p.life-=dt;if(!p.ring){p.x+=p.vx*dt/16.666;p.y+=p.vy*dt/16.666;p.vy+=(p.shape==="fire"?-.08:p.shape==="ghost"?-.025:.12)*dt/16.666;p.angle=(p.angle||0)+(p.spin||0)*dt/16.666}return p.life>0
   });
   state.afterImages=state.afterImages.filter(a=>(a.life-=dt)>0);
+  const limits=perfLimits[state.quality];
+  if(state.particles.length>limits.particles)state.particles.splice(0,state.particles.length-limits.particles);
+  if(state.afterImages.length>limits.afterImages)state.afterImages.splice(0,state.afterImages.length-limits.afterImages);
   state.flash=Math.max(0,state.flash-dt*.0018);state.cinematic=Math.max(0,state.cinematic-dt);
 }
 function drawEffects(c){
@@ -999,7 +1010,7 @@ function updateProjectiles(dt){
 }
 function drawProjectiles(c,t){
   state.projectiles.forEach(p=>{
-    c.save();c.translate(p.x,p.y);c.shadowColor=p.color;c.shadowBlur=28;c.strokeStyle=p.color;c.fillStyle=p.color;
+    c.save();c.translate(p.x,p.y);c.shadowColor=p.color;c.shadowBlur=perfLimits[state.quality].shadow;c.strokeStyle=p.color;c.fillStyle=p.color;
     if(p.kind==="bolt"){
       c.lineWidth=9;c.beginPath();c.moveTo(0,-50);for(let y=-38;y<55;y+=13)c.lineTo((Math.random()-.5)*24,y);c.stroke();
     }else if(p.kind==="quake"){
@@ -1083,6 +1094,8 @@ function handleKeyboardHeld(){
   if(!P1||state.screen!=="fight"||state.paused||!state.running||state.roundLock||state.roundEnding)return;
   P1.setBlock(!!keys.KeyS);
   if(keys.KeyA)P1.move(-1);if(keys.KeyD)P1.move(1);
+  if(touchHeld.has("down"))P1.setBlock(true);
+  if(touchHeld.has("left"))P1.move(-1);if(touchHeld.has("right"))P1.move(1);
   if(state.mode==="local"){
     P2.setBlock(!!keys.ArrowDown);
     if(keys.ArrowLeft)P2.move(-1);if(keys.ArrowRight)P2.move(1);
@@ -1145,6 +1158,25 @@ function toggleDebug(){
   state.debugHitboxes=!state.debugHitboxes;saveSettings();
   if(state.screen==="fight")toast(state.debugHitboxes?"HITBOX DEBUG ATIVO":"HITBOX DEBUG DESATIVADO");
 }
+
+function releaseTouchPointer(pointerId){
+  const btn=touchPointers.get(pointerId);if(!btn)return;
+  const dir=btn.dataset.touchDir;if(dir)touchHeld.delete(dir);
+  btn.classList.remove("active");touchPointers.delete(pointerId);
+  if(dir==="down"&&P1)P1.setBlock(false);
+}
+document.querySelectorAll(".touch-key").forEach(btn=>{
+  btn.addEventListener("contextmenu",e=>e.preventDefault());
+  btn.addEventListener("pointerdown",e=>{
+    e.preventDefault();audio.ensure();btn.setPointerCapture?.(e.pointerId);btn.classList.add("active");touchPointers.set(e.pointerId,btn);
+    const dir=btn.dataset.touchDir,action=btn.dataset.touchAction;
+    if(dir){touchHeld.add(dir);if(P1)pushInput(1,directionalToken(P1,dir))}
+    if(action)inputAction(1,action);
+  });
+  ["pointerup","pointercancel","lostpointercapture"].forEach(type=>btn.addEventListener(type,e=>{e.preventDefault();releaseTouchPointer(e.pointerId)}));
+});
+window.addEventListener("blur",()=>{touchHeld.clear();touchPointers.forEach((_,id)=>releaseTouchPointer(id))});
+
 window.addEventListener("keydown",e=>{
   if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)&&["title","menu","select","fight"].includes(state.screen))e.preventDefault();
   if(e.repeat)return;
@@ -1330,9 +1362,18 @@ function togglePause(){
   state.paused=!state.paused;DOM.pauseOverlay.classList.toggle("hidden",!state.paused);
 }
 
+function applyQuality(level){
+  state.quality=level;document.documentElement.classList.toggle("perf-low",level==="low");
+  document.documentElement.dataset.quality=level;
+}
+
 function gameLoop(t){
   requestAnimationFrame(gameLoop);
   const dt=Math.min(34,t-state.lastTime||16.666);state.lastTime=t;
+  state.frameIndex++;
+  state.slowFrames=dt>27?Math.min(240,state.slowFrames+1):Math.max(0,state.slowFrames-2);
+  if(state.slowFrames>120&&state.quality==="high"){applyQuality("medium");state.slowFrames=0}
+  else if(state.slowFrames>160&&state.quality==="medium"){applyQuality("low");state.slowFrames=0}
   pollGamepads();
   if(state.screen==="select"){
     state.previewTime=t;
@@ -1340,7 +1381,7 @@ function gameLoop(t){
     renderPreview(DOM.p2Preview,state.gameMode==="training"?dummyDef:fighterDefs[state.p2Index],true,t);
     updateRosterThumbs(t);
   }else if(state.screen==="fight"&&P1&&P2){
-    updateGame(dt);drawFight(t);
+    updateGame(dt);if(state.frameIndex%perfLimits[state.quality].drawEvery===0)drawFight(t);
   }
 }
 document.querySelectorAll(".mode-btn").forEach(btn=>btn.addEventListener("click",()=>{
@@ -1372,6 +1413,10 @@ $("result-select-btn").addEventListener("click",openMenu);
 
 $("debug-btn").addEventListener("click",toggleDebug);
 $("sound-btn").addEventListener("click",()=>{state.sound=!state.sound;saveSettings();if(state.sound)audio.select()});
+$("mouse-controls-btn").addEventListener("click",()=>{
+  const enabled=document.documentElement.classList.toggle("mouse-controls");
+  $("mouse-controls-btn").textContent=`CONTROLES: ${enabled?"ON":"OFF"}`;
+});
 
 DOM.optAudio.addEventListener("change",()=>{state.sound=DOM.optAudio.checked;saveSettings();if(state.sound)audio.select()});
 DOM.optVolume.addEventListener("input",()=>{state.volume=Number(DOM.optVolume.value)/100;saveSettings()});
@@ -1392,10 +1437,25 @@ $("reset-options-btn").addEventListener("click",()=>{
   saveSettings();audio.select();
 });
 
+let deferredInstallPrompt=null;
+const installBtn=$("install-btn");
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();deferredInstallPrompt=e;installBtn.classList.remove("hidden");
+});
+installBtn.addEventListener("click",async()=>{
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;installBtn.classList.add("hidden");
+  }
+});
+window.addEventListener("appinstalled",()=>{installBtn.classList.add("hidden");deferredInstallPrompt=null});
+if("serviceWorker" in navigator&&location.protocol.startsWith("http")){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));
+}
+
 window.addEventListener("gamepadconnected",refreshMenuStatus);
 window.addEventListener("gamepaddisconnected",refreshMenuStatus);
 
 loadAssets().then(()=>{
-  loadSettings();buildRoster();updateSelectUI();setMenuIndex(0);refreshMenuStatus();requestAnimationFrame(gameLoop);
+  applyQuality(initialQuality);loadSettings();buildRoster();updateSelectUI();setMenuIndex(0);refreshMenuStatus();requestAnimationFrame(gameLoop);
 });
 })();

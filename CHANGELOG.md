@@ -1,5 +1,16 @@
 # Changelog
 
+## v3.2.0 — Mobile & PWA
+
+- adiciona controles touchscreen completos para movimento, defesa, golpes, dash, poderes e especiais
+- preserva o buffer de comandos no direcional touch
+- adiciona controles clicáveis opcionais para mouse no desktop
+- otimiza o HUD para celulares em orientação horizontal e áreas seguras de notch
+- adiciona aviso de rotação durante lutas em modo retrato
+- seleciona qualidade inicial conforme memória, processador, tipo de ponteiro e preferência por movimento reduzido
+- reduz automaticamente partículas, afterimages, sombras e taxa visual em dispositivos lentos
+- adiciona manifest, service worker, cache offline e ícones PWA dedicados
+
 ## v3.1.0 — Elemental Arenas
 
 ### Combate e efeitos

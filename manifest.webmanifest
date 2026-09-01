@@ -1,0 +1,16 @@
+{
+  "name": "NEON CLASH — Pixel Arcade Fighter",
+  "short_name": "NEON CLASH",
+  "description": "Jogo de luta 2D pixel-art com oito lutadores, Arena, Treino, Versus e Survival.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#05050b",
+  "theme_color": "#05050b",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {"src": "./assets/ui/pwa-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "./assets/ui/pwa-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

@@ -6,7 +6,7 @@
 
 **Um jogo de luta 2D para navegador com 8 lutadores, campanha Arena, Treino, Versus, Survival, especiais, finalizações e suporte a gamepad.**
 
-![Version](https://img.shields.io/badge/version-3.1.0-46e8ff?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-3.2.0-46e8ff?style=for-the-badge)
 ![HTML5](https://img.shields.io/badge/HTML5-Canvas-ff6339?style=for-the-badge&logo=html5&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-ffd84f?style=for-the-badge&logo=javascript&logoColor=111)
 ![CSS](https://img.shields.io/badge/CSS3-Pixel_UI-7850ff?style=for-the-badge&logo=css)
@@ -410,6 +410,14 @@ Isso permite ajustar cada golpe individualmente e deixa o combate mais próximo 
 | Hitbox Debug | `F2` |
 | Pausa | `ESC` |
 
+### Mouse e touchscreen
+
+- todos os menus e a tela `PRESS START` respondem a clique ou toque;
+- no desktop, `CONTROLES: ON` exibe comandos clicáveis durante a luta;
+- em celulares e tablets, o direcional e os botões de golpe aparecem automaticamente;
+- o direcional touch reconhece `↓ → + SOCO` pelo mesmo buffer de comandos;
+- durante o combate móvel, o jogo orienta o uso da tela horizontal.
+
 ### Player 2
 
 | Ação | Tecla |
@@ -475,6 +483,8 @@ O jogo usa a **Gamepad API** do navegador.
 | Pausa | `Options` |
 
 O primeiro controle conectado pode navegar pelo menu principal usando D-Pad/analógico e `A / X`.
+
+Teclado, mouse, touchscreen e gamepad podem coexistir em dispositivos híbridos.
 
 ---
 
@@ -732,6 +742,10 @@ Nenhum banco de dados é necessário.
 - [x] hitbox debug
 - [x] configurações persistentes
 - [x] tela cheia
+- [x] controles touchscreen
+- [x] layout móvel horizontal
+- [x] qualidade gráfica adaptativa
+- [x] versão PWA instalável
 - [ ] seleção de skins
 - [ ] golpes agarrão
 - [ ] crouch attacks
@@ -742,7 +756,6 @@ Nenhum banco de dados é necessário.
 - [ ] ranking local
 - [ ] replay system
 - [ ] multiplayer online
-- [ ] versão PWA instalável
 
 ---
 
