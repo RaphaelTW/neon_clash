@@ -1,5 +1,25 @@
 # Changelog
 
+## v3.1.0 — Elemental Arenas
+
+### Combate e efeitos
+- adiciona identidade elemental própria para poderes, especiais e finalizações dos oito lutadores
+- diferencia visualmente fogo, vazio, terra, raio, eletricidade cinética, energia psíquica, gelo e magia hexagonal
+- adiciona partículas com formas, movimento, brilho e auras específicos por personagem
+- redesenha projéteis para comunicar melhor o tipo e a origem de cada ataque
+
+### Arenas
+- adiciona Santuário Abissal
+- adiciona Torre da Tempestade
+- adiciona Ruínas de Gaia
+- adiciona Metrô Fantasma
+- adiciona Cidadela Psíquica
+- expande a seleção e a rotação procedural de três para oito arenas
+
+### Identidade
+- adiciona favicon próprio ao jogo
+- atualiza o README com o novo logo oficial
+
 ## v3.0.0 — Pixel Arcade Edition
 
 ### Interface

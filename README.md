@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="./assets/ui/neon_clash_logo_pixel.gif" alt="NEON CLASH" width="820">
+<img src="./logo.png" alt="NEON CLASH" width="820">
 
 ### ⚡ PIXEL ARCADE FIGHTER
 
 **Um jogo de luta 2D para navegador com 8 lutadores, campanha Arena, Treino, Versus, Survival, especiais, finalizações e suporte a gamepad.**
 
-![Version](https://img.shields.io/badge/version-3.0.0-46e8ff?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-3.1.0-46e8ff?style=for-the-badge)
 ![HTML5](https://img.shields.io/badge/HTML5-Canvas-ff6339?style=for-the-badge&logo=html5&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-ffd84f?style=for-the-badge&logo=javascript&logoColor=111)
 ![CSS](https://img.shields.io/badge/CSS3-Pixel_UI-7850ff?style=for-the-badge&logo=css)
