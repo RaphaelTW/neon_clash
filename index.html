@@ -1,160 +1,200 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#080812" />
-  <meta name="description" content="NEON CLASH — jogo de luta 2D para navegador com 6 personagens, especiais, mana, stamina e multiplayer local." />
-  <title>NEON CLASH</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#05050b">
+  <meta name="description" content="NEON CLASH — jogo de luta 2D arcade com seis personagens, poderes, especiais, finalizações e gamepad.">
+  <title>NEON CLASH — Arcade Fighter</title>
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <main id="app">
     <section id="select-screen" class="screen active">
-      <div class="ambient ambient-a"></div>
-      <div class="ambient ambient-b"></div>
+      <div class="select-backdrop"></div>
 
-      <header class="hero">
-        <p class="eyebrow">ARCADE COMBAT // 2D</p>
+      <div id="intro-overlay" class="intro-overlay">
+        <img src="./assets/ui/emblem.png" class="intro-emblem" alt="">
+        <p class="kicker">A NEW CHALLENGER RISES</p>
         <h1>NEON <span>CLASH</span></h1>
-        <p class="subtitle">Escolha seu lutador. Domine energia, stamina e poder especial.</p>
-      </header>
-
-      <div class="mode-row">
-        <button class="mode-btn active" data-mode="cpu">1P VS CPU</button>
-        <button class="mode-btn" data-mode="local">2P LOCAL</button>
+        <p class="intro-copy">Seis guerreiros. Três arenas. Um campeão.</p>
+        <button id="enter-game" class="arcade-cta">PRESSIONE ENTER / START</button>
+        <small>Teclado + controles Xbox / PlayStation compatíveis</small>
       </div>
 
-      <section class="selection-layout">
-        <div class="player-card player-one">
-          <span class="slot-label">PLAYER 1</span>
-          <div class="portrait-shell">
-            <canvas id="preview-p1" width="360" height="420"></canvas>
-          </div>
-          <h2 id="p1-name">KAEL IGNIS</h2>
-          <p id="p1-title">O Punho Solar</p>
-          <div class="stat-bars" id="p1-stats"></div>
-        </div>
-
+      <header class="select-header">
         <div>
+          <p class="kicker">FIGHTER SELECT // 01</p>
+          <h1>ESCOLHA SEU <span>LUTADOR</span></h1>
+        </div>
+        <div class="mode-switch">
+          <button class="mode-btn active" data-mode="cpu">1P VS CPU</button>
+          <button class="mode-btn" data-mode="local">2P LOCAL</button>
+        </div>
+      </header>
+
+      <section class="duel-stage">
+        <article class="fighter-panel p1-panel">
+          <div class="panel-top">
+            <span>PLAYER 1</span>
+            <b id="p1-special-name">SUPERNOVA</b>
+          </div>
+          <canvas id="preview-p1" width="520" height="600"></canvas>
+          <div class="fighter-copy">
+            <p id="p1-title">O Punho Solar</p>
+            <h2 id="p1-name">KAEL IGNIS</h2>
+            <p id="p1-bio"></p>
+            <div class="stats" id="p1-stats"></div>
+          </div>
+        </article>
+
+        <div class="select-center">
+          <div class="versus">VS</div>
+
           <div class="roster" id="roster"></div>
 
-          <div class="arena-config">
-            <div>
-              <label for="arena-select">ARENA</label>
-              <select id="arena-select">
-                <option value="neon">Distrito Neon</option>
-                <option value="temple">Templo Lunar</option>
-                <option value="forge">Forja Vulcânica</option>
-              </select>
+          <section class="arena-section">
+            <div class="section-heading">
+              <span>ARENA</span>
+              <small>Escolha o campo de batalha</small>
             </div>
-            <div id="difficulty-wrap">
-              <label for="difficulty">IA</label>
+            <div class="arena-grid">
+              <button class="arena-card active" data-arena="neon">
+                <span class="arena-art neon-art"></span>
+                <b>DISTRITO NEON</b><small>Neo-São Paulo · 02:13</small>
+              </button>
+              <button class="arena-card" data-arena="temple">
+                <span class="arena-art temple-art"></span>
+                <b>TEMPLO LUNAR</b><small>Monte Kuro · Lua Cheia</small>
+              </button>
+              <button class="arena-card" data-arena="forge">
+                <span class="arena-art forge-art"></span>
+                <b>FORJA VULCÂNICA</b><small>Setor Zero · Alerta</small>
+              </button>
+            </div>
+          </section>
+
+          <div class="select-options">
+            <label id="difficulty-wrap">
+              <span>IA</span>
               <select id="difficulty">
                 <option value="easy">Fácil</option>
                 <option value="normal" selected>Normal</option>
                 <option value="hard">Difícil</option>
               </select>
-            </div>
+            </label>
+            <label>
+              <span>ROUNDS</span>
+              <select id="rounds-select">
+                <option value="2" selected>Melhor de 3</option>
+                <option value="3">Melhor de 5</option>
+              </select>
+            </label>
           </div>
 
           <button id="fight-btn" class="fight-btn">
-            <span>INICIAR COMBATE</span>
+            <span>FIGHT</span>
             <small>ENTER</small>
           </button>
 
-          <div class="controls-help">
-            <div>
-              <b>P1</b>
-              <span>A/D mover · W pular · S defender · J soco · K chute · L poder · U especial · I dash</span>
-            </div>
-            <div>
-              <b>P2</b>
-              <span>←/→ mover · ↑ pular · ↓ defender · 1 soco · 2 chute · 3 poder · 4 especial · 5 dash</span>
-            </div>
+          <div class="input-hints">
+            <span><b>P1</b> A/D mover · W pular · S defesa · J soco · K chute · L poder · U especial · I dash</span>
+            <span><b>P2</b> ←/→ mover · ↑ pular · ↓ defesa · 1 soco · 2 chute · 3 poder · 4 especial · 5 dash</span>
+            <span><b>COMANDO</b> ↓ → + SOCO = golpe especial de comando</span>
           </div>
         </div>
 
-        <div class="player-card player-two">
-          <span class="slot-label" id="p2-slot-label">CPU</span>
-          <div class="portrait-shell">
-            <canvas id="preview-p2" width="360" height="420"></canvas>
+        <article class="fighter-panel p2-panel">
+          <div class="panel-top">
+            <b id="p2-special-name">ECLIPSE</b>
+            <span id="p2-slot-label">CPU</span>
           </div>
-          <h2 id="p2-name">NYX VESPER</h2>
-          <p id="p2-title">A Lâmina do Vazio</p>
-          <div class="stat-bars" id="p2-stats"></div>
-        </div>
+          <canvas id="preview-p2" width="520" height="600"></canvas>
+          <div class="fighter-copy right-copy">
+            <p id="p2-title">A Lâmina do Vazio</p>
+            <h2 id="p2-name">NYX VESPER</h2>
+            <p id="p2-bio"></p>
+            <div class="stats" id="p2-stats"></div>
+          </div>
+        </article>
       </section>
 
       <footer class="select-footer">
-        <span>6 LUTADORES</span><i></i><span>3 ARENAS</span><i></i><span>1P / 2P LOCAL</span>
+        <span id="pad-p1">P1: TECLADO</span>
+        <i></i>
+        <span id="pad-p2">P2: TECLADO</span>
+        <i></i>
+        <span>SPRITES 2D · 60 FPS</span>
       </footer>
     </section>
 
     <section id="fight-screen" class="screen">
       <canvas id="game-canvas" width="1600" height="900"></canvas>
 
-      <div class="top-hud">
-        <div class="fighter-hud left">
-          <div class="name-row">
+      <div class="hud">
+        <div class="fighter-hud p1-hud">
+          <div class="hud-name">
             <span id="hud-p1-name">KAEL IGNIS</span>
-            <strong id="p1-rounds">● ○</strong>
+            <strong id="p1-wins"></strong>
           </div>
-          <div class="meter health"><div id="p1-health"></div></div>
-          <div class="submeters">
-            <div class="meter mana"><div id="p1-mana"></div></div>
-            <div class="meter stamina"><div id="p1-stamina"></div></div>
+          <div class="health-frame"><div class="health-fill" id="p1-health"></div><span id="p1-health-text">100</span></div>
+          <div class="resource-row">
+            <div class="resource mana"><div id="p1-mana"></div><span>MANA</span></div>
+            <div class="resource stamina"><div id="p1-stamina"></div><span>STAMINA</span></div>
           </div>
-          <div class="special-meter"><div id="p1-special"></div><span>ESPECIAL</span></div>
+          <div class="super"><div id="p1-super"></div><span>ESPECIAL</span></div>
         </div>
 
-        <div class="center-hud">
-          <div id="round-label">ROUND 1</div>
-          <div id="timer">99</div>
+        <div class="round-hud">
+          <span id="round-label">ROUND 1</span>
+          <b id="timer">99</b>
+          <small id="arena-label">DISTRITO NEON</small>
         </div>
 
-        <div class="fighter-hud right">
-          <div class="name-row">
-            <strong id="p2-rounds">○ ●</strong>
+        <div class="fighter-hud p2-hud">
+          <div class="hud-name">
+            <strong id="p2-wins"></strong>
             <span id="hud-p2-name">NYX VESPER</span>
           </div>
-          <div class="meter health"><div id="p2-health"></div></div>
-          <div class="submeters">
-            <div class="meter mana"><div id="p2-mana"></div></div>
-            <div class="meter stamina"><div id="p2-stamina"></div></div>
+          <div class="health-frame"><div class="health-fill" id="p2-health"></div><span id="p2-health-text">100</span></div>
+          <div class="resource-row">
+            <div class="resource mana"><div id="p2-mana"></div><span>MANA</span></div>
+            <div class="resource stamina"><div id="p2-stamina"></div><span>STAMINA</span></div>
           </div>
-          <div class="special-meter"><div id="p2-special"></div><span>ESPECIAL</span></div>
+          <div class="super"><div id="p2-super"></div><span>ESPECIAL</span></div>
         </div>
       </div>
 
-      <div id="combat-message" class="combat-message"></div>
+      <div id="combo-p1" class="combo-label left"></div>
+      <div id="combo-p2" class="combo-label right"></div>
+      <div id="announcement" class="announcement"></div>
+      <div id="command-toast" class="command-toast"></div>
 
-      <div class="fight-actions">
+      <div class="fight-buttons">
+        <button id="sound-btn" title="Som">SOM: ON</button>
         <button id="pause-btn">PAUSAR</button>
-        <button id="back-btn">SELEÇÃO</button>
       </div>
 
-      <div id="pause-overlay" class="overlay hidden">
-        <div class="overlay-card">
-          <p class="eyebrow">NEON CLASH</p>
+      <div id="pause-overlay" class="modal-overlay hidden">
+        <div class="modal-card">
+          <p class="kicker">NEON CLASH</p>
           <h2>PAUSADO</h2>
-          <button id="resume-btn">CONTINUAR</button>
+          <button id="resume-btn" class="primary-btn">CONTINUAR</button>
           <button id="pause-select-btn">VOLTAR À SELEÇÃO</button>
         </div>
       </div>
 
-      <div id="result-overlay" class="overlay hidden">
-        <div class="overlay-card result-card">
-          <p class="eyebrow">RESULTADO</p>
-          <h2 id="winner-text">PLAYER 1 VENCEU</h2>
-          <p id="winner-subtitle"></p>
-          <button id="rematch-btn">REVANCHE</button>
+      <div id="result-overlay" class="modal-overlay hidden">
+        <div class="modal-card result-card">
+          <p class="kicker">MATCH RESULT</p>
+          <h2 id="winner-text">KAEL IGNIS VENCEU</h2>
+          <p id="winner-detail"></p>
+          <button id="rematch-btn" class="primary-btn">REVANCHE</button>
           <button id="result-select-btn">TROCAR LUTADORES</button>
         </div>
       </div>
     </section>
   </main>
-
   <script src="./game.js"></script>
 </body>
 </html>

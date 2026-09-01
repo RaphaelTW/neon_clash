@@ -1,0 +1,338 @@
+{
+  "kael": {
+    "idle": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/kael/idle.png"
+    },
+    "walk": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/kael/walk.png"
+    },
+    "jump": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/kael/jump.png"
+    },
+    "punch": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/kael/punch.png"
+    },
+    "kick": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/kael/kick.png"
+    },
+    "hurt": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/kael/hurt.png"
+    },
+    "ko": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/kael/ko.png"
+    },
+    "special": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/kael/special.png"
+    },
+    "finisher": {
+      "frames": 7,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/kael/finisher.png"
+    }
+  },
+  "nyx": {
+    "idle": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/nyx/idle.png"
+    },
+    "walk": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/nyx/walk.png"
+    },
+    "jump": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/nyx/jump.png"
+    },
+    "punch": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/nyx/punch.png"
+    },
+    "kick": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/nyx/kick.png"
+    },
+    "hurt": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/nyx/hurt.png"
+    },
+    "ko": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/nyx/ko.png"
+    },
+    "special": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/nyx/special.png"
+    },
+    "finisher": {
+      "frames": 7,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/nyx/finisher.png"
+    }
+  },
+  "bront": {
+    "idle": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/bront/idle.png"
+    },
+    "walk": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/bront/walk.png"
+    },
+    "jump": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/bront/jump.png"
+    },
+    "punch": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/bront/punch.png"
+    },
+    "kick": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/bront/kick.png"
+    },
+    "hurt": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/bront/hurt.png"
+    },
+    "ko": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/bront/ko.png"
+    },
+    "special": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/bront/special.png"
+    },
+    "finisher": {
+      "frames": 7,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/bront/finisher.png"
+    }
+  },
+  "aiko": {
+    "idle": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/aiko/idle.png"
+    },
+    "walk": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/aiko/walk.png"
+    },
+    "jump": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/aiko/jump.png"
+    },
+    "punch": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/aiko/punch.png"
+    },
+    "kick": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/aiko/kick.png"
+    },
+    "hurt": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/aiko/hurt.png"
+    },
+    "ko": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/aiko/ko.png"
+    },
+    "special": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/aiko/special.png"
+    },
+    "finisher": {
+      "frames": 7,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/aiko/finisher.png"
+    }
+  },
+  "volt": {
+    "idle": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/volt/idle.png"
+    },
+    "walk": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/volt/walk.png"
+    },
+    "jump": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/volt/jump.png"
+    },
+    "punch": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/volt/punch.png"
+    },
+    "kick": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/volt/kick.png"
+    },
+    "hurt": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/volt/hurt.png"
+    },
+    "ko": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/volt/ko.png"
+    },
+    "special": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/volt/special.png"
+    },
+    "finisher": {
+      "frames": 7,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/volt/finisher.png"
+    }
+  },
+  "morvane": {
+    "idle": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/morvane/idle.png"
+    },
+    "walk": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/morvane/walk.png"
+    },
+    "jump": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/morvane/jump.png"
+    },
+    "punch": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/morvane/punch.png"
+    },
+    "kick": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/morvane/kick.png"
+    },
+    "hurt": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/morvane/hurt.png"
+    },
+    "ko": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/morvane/ko.png"
+    },
+    "special": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/morvane/special.png"
+    },
+    "finisher": {
+      "frames": 7,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/morvane/finisher.png"
+    }
+  }
+}
