@@ -1,125 +1,434 @@
-# NEON CLASH v2.2 — Combat Core
+<div align="center">
 
-**NEON CLASH** é um jogo de luta 2D arcade para navegador, desenvolvido em HTML5 Canvas, CSS e JavaScript puro.
+<img src="./assets/ui/neon_clash_logo_pixel.gif" alt="NEON CLASH" width="820">
 
-Não utiliza personagens, sprites ou propriedades intelectuais de jogos comerciais. Os seis lutadores e todos os sprites do projeto são originais.
+### ⚡ PIXEL ARCADE FIGHTER
 
-## O que existe nesta versão
+**Um jogo de luta 2D para navegador com 8 lutadores, campanha Arena, Treino, Versus, Survival, especiais, finalizações e suporte a gamepad.**
 
-- Tela de abertura estilo arcade
-- Seleção cinematográfica de personagem
-- 6 lutadores com visual próprio
-- 60 spritesheets PNG
-- 9 animações por lutador
-  - idle
-  - walk
-  - jump
-  - fall
-  - punch
-  - kick
-  - hurt
-  - KO
-  - special
-  - finisher
-- 3 arenas
-- 1P vs CPU
-- 2P local
-- IA Fácil / Normal / Difícil
-- Melhor de 3 ou melhor de 5
-- Vida
-- Mana
-- Stamina
-- Barra de especial
-- Defesa e Guard Break
-- Pulo
-- Dash com pequena janela de invulnerabilidade
-- Soco
-- Chute
-- Poder
-- Golpe especial de comando
-- Super especial
-- Combos
-- Projéteis
-- Roubo de vida para Morvane
-- Teleporte para Nyx
-- Raios verticais para Aiko
-- Screen shake
-- Partículas
-- Afterimages
-- Efeitos de impacto
-- SFX sintetizados pelo Web Audio API
-- Pausa
-- Revanche
-- Sistema de finalização `FINALIZE!`
-- Finalização própria de cada personagem
-- Suporte a controles Xbox e PlayStation via Gamepad API
+![Version](https://img.shields.io/badge/version-3.0.0-46e8ff?style=for-the-badge)
+![HTML5](https://img.shields.io/badge/HTML5-Canvas-ff6339?style=for-the-badge&logo=html5&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-ffd84f?style=for-the-badge&logo=javascript&logoColor=111)
+![CSS](https://img.shields.io/badge/CSS3-Pixel_UI-7850ff?style=for-the-badge&logo=css)
+![Gamepad](https://img.shields.io/badge/Gamepad-Xbox_%7C_PlayStation-65ff9d?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-f1375c?style=for-the-badge)
 
+[🎮 Modos](#-modos-de-jogo) •
+[🥊 Lutadores](#-lutadores) •
+[⌨️ Controles](#️-controles) •
+[🕹️ Gamepad](#️-controle-xbox--playstation) •
+[⚙️ Opções](#️-opções) •
+[🚀 Executar](#-como-executar)
 
-## Combat Core v2.2
+</div>
 
-A física e a detecção de golpes foram evoluídas para um modelo mais próximo de jogos de luta:
+---
 
-- **Hurtbox** separada do sprite visual
-- **Pushbox** para impedir que os lutadores atravessem um ao outro
-- **Attack box** independente por golpe
-- Golpes divididos em **startup, active frames e recovery**
-- Colisão de projéteis contra hurtbox real
-- **Hit-stop** no momento do impacto
-- Wall recoil em golpes fortes próximos das extremidades
-- Câmera dinâmica conforme a distância entre os lutadores
-- Animações distintas de subida (`jump`) e queda (`fall`)
-- Cenários com elementos animados
-- Debug visual de colisões com `F2`
+## 🌃 Visão geral
 
-No modo debug:
+**NEON CLASH** é um fighting game 2D construído para rodar diretamente no navegador.
 
-- Verde = hurtbox
-- Azul = pushbox
-- Vermelho = attack box durante frames ativos
+A versão **Pixel Arcade Edition** transforma o projeto em uma experiência mais próxima de um jogo de fliperama:
 
+- tela inicial em pixel art com **PRESS START**;
+- menu principal;
+- oito personagens jogáveis;
+- campanha de oito lutas;
+- luta espelho contra o próprio personagem;
+- modo treino;
+- versus local e contra CPU;
+- survival;
+- finalizações;
+- controles por teclado ou gamepad;
+- configurações persistentes no navegador;
+- spritesheets próprios;
+- hitboxes reais e frames ativos.
 
-## Lutadores
+<img src="./assets/ui/title_background_pixel.png" alt="NEON CLASH Pixel City" width="100%">
 
-| Lutador | Arquétipo | Especial | Finalização |
-|---|---|---|---|
-| Kael Ignis | Brawler | Supernova | Sol Absoluto |
-| Nyx Vesper | Assassin | Eclipse | Zero Lunar |
-| Bront Titan | Tank | Tremor Ômega | Núcleo de Titã |
-| Aiko Raijin | Caster | Tempestade Raijin | Deusa do Trovão |
-| Volt Rex | Rushdown | Overdrive | Velocidade Terminal |
-| Morvane | Drain | Pacto de Sangue | Trono Carmesim |
+---
 
-## Teclado
+## 🎮 Modos de jogo
+
+### 🏆 Modo Arena
+
+O modo principal do jogo.
+
+Você escolhe um dos **8 lutadores** e inicia uma rota de oito confrontos.
+
+```text
+LUTA 1
+   ↓
+LUTA 2
+   ↓
+LUTA 3
+   ↓
+  ...
+   ↓
+LUTA 7
+   ↓
+LUTA 8 — MIRROR MATCH
+   ↓
+GAME CLEAR
+```
+
+A rota contém:
+
+- os outros **7 personagens** do elenco;
+- uma luta final contra **o mesmo personagem que você escolheu**;
+- dificuldade progressivamente maior;
+- alternância automática entre as arenas;
+- barra visual de progresso;
+- `GAME OVER` caso perca;
+- opção para repetir a luta atual;
+- tela de **GAME CLEAR** ao vencer 8/8.
+
+A última luta permite executar a finalização especial do personagem.
+
+---
+
+### 🥋 Modo Treino
+
+Ambiente livre para aprender o sistema de combate.
+
+O adversário é o **DUMMY MK-I**, um boneco de treino que não ataca.
+
+No treino:
+
+- tempo infinito;
+- mana infinita;
+- stamina infinita;
+- especial sempre disponível;
+- dummy parado;
+- vida do dummy restaurada;
+- hitbox debug disponível;
+- reset rápido das posições com `R`.
+
+Ideal para aprender:
+
+```text
+hit confirm
+combos
+alcance
+startup
+active frames
+recovery
+dash
+defesa
+quarter-circle
+especial
+finalização
+```
+
+---
+
+### ⚔️ Versus
+
+Combate tradicional.
+
+Você pode escolher:
+
+#### 1P VS CPU
+
+Um jogador enfrenta a inteligência artificial.
+
+Níveis:
+
+- Fácil
+- Normal
+- Difícil
+
+#### 2P Local
+
+Dois jogadores no mesmo computador.
+
+Exemplos:
+
+```text
+Teclado + Teclado
+Controle + Teclado
+Controle + Controle
+```
+
+---
+
+### 💀 Survival
+
+Um modo adicional de resistência.
+
+Após cada vitória:
+
+- um novo adversário aparece;
+- o cenário pode mudar;
+- a IA fica progressivamente mais agressiva;
+- parte da sua vida é recuperada;
+- a sequência continua até você perder.
+
+O melhor resultado é armazenado no navegador:
+
+```text
+SURVIVAL RECORD
+```
+
+---
+
+## 🥊 Lutadores
+
+<img src="./assets/ui/roster_pixel.png" alt="Elenco NEON CLASH" width="100%">
+
+| # | Personagem | Arquétipo | Especial | Finalização |
+|---:|---|---|---|---|
+| 01 | **Kael Ignis** | Brawler | Supernova | Sol Absoluto |
+| 02 | **Nyx Vesper** | Assassin | Eclipse | Zero Lunar |
+| 03 | **Bront Titan** | Tank | Tremor Ômega | Núcleo de Titã |
+| 04 | **Aiko Raijin** | Caster | Tempestade Raijin | Deusa do Trovão |
+| 05 | **Volt Rex** | Rushdown | Overdrive | Velocidade Terminal |
+| 06 | **Morvane** | Drain | Pacto de Sangue | Trono Carmesim |
+| 07 | **Orion Frost** | Cryomancer | Inverno Absoluto | Zero Kelvin |
+| 08 | **Sable Hex** | Hex Assassin | Maldição Binária | Blackout Hex |
+
+<details>
+<summary><b>🔥 Kael Ignis</b></summary>
+
+**O Punho Solar**
+
+Focado em pressão e dano físico.
+
+- poder alto;
+- projétil de fogo;
+- forte combate a curta distância;
+- comando: **Onda Solar**;
+- especial: **Supernova**;
+- finalização: **Sol Absoluto**.
+
+</details>
+
+<details>
+<summary><b>🌑 Nyx Vesper</b></summary>
+
+**A Lâmina do Vazio**
+
+Assassina de alta velocidade.
+
+- teleporte;
+- alto potencial de combo;
+- projétil rápido;
+- comando: **Corte Fantasma**;
+- especial: **Eclipse**;
+- finalização: **Zero Lunar**.
+
+</details>
+
+<details>
+<summary><b>⚙️ Bront Titan</b></summary>
+
+**O Colosso de Ferro**
+
+O personagem mais resistente do elenco.
+
+- defesa extrema;
+- maior dano bruto;
+- ataques sísmicos;
+- quebra de guarda;
+- especial: **Tremor Ômega**;
+- finalização: **Núcleo de Titã**.
+
+</details>
+
+<details>
+<summary><b>⚡ Aiko Raijin</b></summary>
+
+**A Dançarina da Tempestade**
+
+Especialista em energia e controle de espaço.
+
+- excelente regeneração de mana;
+- ataques elétricos;
+- raios verticais;
+- comando: **Arco Elétrico**;
+- especial: **Tempestade Raijin**;
+- finalização: **Deusa do Trovão**.
+
+</details>
+
+<details>
+<summary><b>☢️ Volt Rex</b></summary>
+
+**O Predador Cinético**
+
+Personagem agressivo de rushdown.
+
+- dash veloz;
+- mobilidade alta;
+- pressão constante;
+- comando: **Ruptura Cinética**;
+- especial: **Overdrive**;
+- finalização: **Velocidade Terminal**.
+
+</details>
+
+<details>
+<summary><b>🩸 Morvane</b></summary>
+
+**O Arauto Carmesim**
+
+Manipula energia vital.
+
+- ataques de médio alcance;
+- projéteis carmesim;
+- roubo de vida;
+- comando: **Orbe Hemático**;
+- especial: **Pacto de Sangue**;
+- finalização: **Trono Carmesim**.
+
+</details>
+
+<details>
+<summary><b>❄️ Orion Frost</b></summary>
+
+**O Herdeiro do Zero**
+
+Criomante especializado em controle.
+
+- rajadas de gelo;
+- efeito de congelamento;
+- três lanças de gelo no comando;
+- especial: **Inverno Absoluto**;
+- finalização: **Zero Kelvin**.
+
+</details>
+
+<details>
+<summary><b>🔶 Sable Hex</b></summary>
+
+**A Bruxa do Circuito**
+
+Assassina baseada em teleporte e energia arcana.
+
+- alta velocidade;
+- projéteis hexagonais;
+- drenagem de mana;
+- teleporte ofensivo;
+- especial: **Maldição Binária**;
+- finalização: **Blackout Hex**.
+
+</details>
+
+---
+
+## ❤️ Sistema de combate
+
+Cada lutador possui quatro recursos principais.
+
+| Recurso | Função |
+|---|---|
+| ❤️ **Vida** | Chegando a zero, o round termina |
+| 🔵 **Mana** | Consumida por poderes e comandos |
+| 🟡 **Stamina** | Consumida por golpes físicos, defesa, dash e pulo |
+| 🟣 **Especial** | Enche durante o combate e libera o super |
+
+O motor também possui:
+
+- combos;
+- defesa;
+- guard break;
+- dash;
+- invulnerabilidade curta no dash;
+- knockback;
+- projéteis;
+- especiais;
+- finalizações;
+- wall recoil;
+- screen shake;
+- hit sparks;
+- partículas;
+- afterimages;
+- câmera dinâmica.
+
+---
+
+## 📦 Hitbox, Hurtbox e Pushbox
+
+O sistema de colisão não depende apenas da imagem do personagem.
+
+Cada lutador possui:
+
+### 🟢 Hurtbox
+
+Área onde ele pode receber dano.
+
+### 🔴 Attack Box
+
+Área ativa do golpe.
+
+Só existe durante os **active frames**.
+
+### 🔵 Pushbox
+
+Impede dois personagens de ocuparem o mesmo espaço.
+
+Pressione:
+
+```text
+F2
+```
+
+para ativar o modo visual.
+
+---
+
+## ⏱️ Startup → Active → Recovery
+
+Os ataques são divididos em três etapas.
+
+```text
+┌─────────┬──────────────┬──────────┐
+│ STARTUP │ ACTIVE FRAME │ RECOVERY │
+└─────────┴──────────────┴──────────┘
+```
+
+Isso permite ajustar cada golpe individualmente e deixa o combate mais próximo de um fighting game tradicional.
+
+---
+
+## ⌨️ Controles
 
 ### Player 1
 
 | Ação | Tecla |
 |---|---|
-| Mover | A / D |
-| Pular | W |
-| Defender | S |
-| Soco | J |
-| Chute | K |
-| Poder | L |
-| Especial | U |
-| Dash | I |
+| Esquerda | `A` |
+| Direita | `D` |
+| Pular | `W` |
+| Defender | `S` |
+| Soco | `J` |
+| Chute | `K` |
+| Poder | `L` |
+| Especial / Finalização | `U` |
+| Dash | `I` |
+| Reset no treino | `R` |
+| Hitbox Debug | `F2` |
+| Pausa | `ESC` |
 
 ### Player 2
 
 | Ação | Tecla |
 |---|---|
-| Mover | ← / → |
-| Pular | ↑ |
-| Defender | ↓ |
-| Soco | 1 |
-| Chute | 2 |
-| Poder | 3 |
-| Especial | 4 |
-| Dash | 5 |
+| Esquerda | `←` |
+| Direita | `→` |
+| Pular | `↑` |
+| Defender | `↓` |
+| Soco | `1` |
+| Chute | `2` |
+| Poder | `3` |
+| Especial / Finalização | `4` |
+| Dash | `5` |
 
-## Comandos de luta
+---
 
-O motor possui um buffer de comandos.
+## 🌀 Comandos
+
+Existe buffer de comandos para movimentos especiais.
 
 ### Quarter Circle Forward
 
@@ -127,109 +436,346 @@ O motor possui um buffer de comandos.
 ↓ → + SOCO
 ```
 
-O sentido de `→` é relativo à direção para a qual o lutador está olhando.
+`→` significa **para frente**, portanto muda automaticamente quando o personagem troca de lado.
 
-Cada personagem executa um golpe diferente:
+Cada lutador executa um movimento diferente.
 
-- Kael: **Onda Solar**
-- Nyx: **Corte Fantasma**
-- Bront: **Onda Sísmica**
-- Aiko: **Arco Elétrico**
-- Volt: **Ruptura Cinética**
-- Morvane: **Orbe Hemático**
+---
 
-## Gamepad
+## 🕹️ Controle Xbox / PlayStation
 
-Mapeamento padrão:
+O jogo usa a **Gamepad API** do navegador.
 
-| Ação | Xbox | PlayStation |
-|---|---|---|
-| Soco | A | X |
-| Chute | B | ○ |
-| Poder | X | □ |
-| Especial / Finalização | Y | △ |
-| Defesa | LB | L1 |
-| Dash | RB | R1 |
-| Movimento | D-Pad / Analógico | D-Pad / Analógico |
-| Pular | ↑ | ↑ |
-| Pausa | Menu | Options |
+### Xbox
 
-Dois controles conectados podem ser usados no modo 2P Local.
+| Ação | Controle |
+|---|---|
+| Movimento | Analógico / D-Pad |
+| Pular | `↑` |
+| Soco | `A` |
+| Chute | `B` |
+| Poder | `X` |
+| Especial | `Y` |
+| Defender | `LB` |
+| Dash | `RB` |
+| Pausa | `Menu` |
 
-## Finalizações
+### PlayStation
 
-No round que pode decidir a partida, reduzir o adversário a zero ativa:
+| Ação | Controle |
+|---|---|
+| Movimento | Analógico / D-Pad |
+| Pular | `↑` |
+| Soco | `X` |
+| Chute | `○` |
+| Poder | `□` |
+| Especial | `△` |
+| Defender | `L1` |
+| Dash | `R1` |
+| Pausa | `Options` |
+
+O primeiro controle conectado pode navegar pelo menu principal usando D-Pad/analógico e `A / X`.
+
+---
+
+## ⚙️ Opções
+
+As preferências são armazenadas com `localStorage`.
+
+O menu permite alterar:
+
+- áudio;
+- volume;
+- screen shake;
+- câmera dinâmica;
+- hitbox debug;
+- dificuldade padrão;
+- tela cheia.
+
+Os valores permanecem salvos depois de fechar o navegador.
+
+---
+
+## 🎨 Pixel Art
+
+A identidade visual da versão 3 utiliza assets pixelizados próprios:
 
 ```text
-FINALIZE!
+assets/ui/
+├── neon_clash_logo_pixel.gif
+├── neon_clash_logo_pixel.png
+├── title_background_pixel.png
+└── menu_background_pixel.png
 ```
 
-O vencedor recebe alguns segundos para pressionar o botão de **Especial**.
+O logo animado usado neste README é o mesmo da tela inicial do jogo.
 
-Cada personagem possui uma animação e um nome de finalização próprios.
+Os sprites são organizados por personagem.
 
-## Executar
-
-A forma mais simples é abrir:
+Cada personagem possui:
 
 ```text
-index.html
+idle
+walk
+jump
+fall
+punch
+kick
+hurt
+ko
+special
+finisher
 ```
 
-Também pode utilizar um servidor local:
+São **90 spritesheets PNG** no total considerando os oito lutadores e o dummy de treino.
+
+---
+
+## 🧠 Inteligência Artificial
+
+A CPU considera:
+
+- distância até o jogador;
+- mana;
+- stamina;
+- vida;
+- barra de especial;
+- alcance;
+- probabilidade de defesa;
+- dash;
+- golpes físicos;
+- poderes;
+- comandos;
+- especiais.
+
+No Modo Arena e Survival a agressividade aumenta conforme o jogador avança.
+
+---
+
+## 🔊 Áudio
+
+Os efeitos são sintetizados em tempo real com:
+
+```text
+Web Audio API
+```
+
+Isso reduz a necessidade de arquivos externos para:
+
+- impactos;
+- golpes;
+- poderes;
+- seleção;
+- K.O.;
+- especiais.
+
+---
+
+## 🚀 Como executar
+
+### Método recomendado no Windows
+
+Execute:
+
+```text
+START_GAME.bat
+```
+
+O inicializador procura automaticamente:
+
+1. `py`
+2. `python`
+3. `npx`
+
+Quando encontra um deles, inicia:
+
+```text
+http://localhost:8080
+```
+
+Essa é a forma recomendada para obter melhor compatibilidade com:
+
+- gamepads;
+- áudio;
+- tela cheia;
+- APIs modernas do navegador.
+
+### PowerShell
+
+Também existe:
+
+```text
+START_GAME.ps1
+```
+
+### Manual
+
+Com Python:
 
 ```bash
 python -m http.server 8080
 ```
 
-Depois acesse `http://localhost:8080`.
-
-## Estrutura
+Depois abra:
 
 ```text
-neon_clash_v2/
+http://localhost:8080
+```
+
+Com Node:
+
+```bash
+npx serve . -l 8080
+```
+
+---
+
+## 📁 Estrutura
+
+```text
+neon_clash_v3/
+│
 ├── index.html
 ├── styles.css
 ├── game.js
 ├── README.md
+├── CHANGELOG.md
 ├── LICENSE
 ├── START_GAME.bat
+├── START_GAME.ps1
+│
 └── assets/
     ├── fighters.json
+    │
     ├── ui/
-    │   └── emblem.png
+    │   ├── neon_clash_logo_pixel.gif
+    │   ├── neon_clash_logo_pixel.png
+    │   ├── title_background_pixel.png
+    │   └── menu_background_pixel.png
+    │
     └── fighters/
         ├── kael/
         ├── nyx/
         ├── bront/
         ├── aiko/
         ├── volt/
-        └── morvane/
+        ├── morvane/
+        ├── orion/
+        ├── sable/
+        └── dummy/
 ```
 
-Cada pasta de personagem contém nove spritesheets PNG.
+---
 
-## Tecnologia
+## 🧱 Stack
 
-- HTML5
-- Canvas 2D
-- CSS3
-- JavaScript ES6+
-- Web Audio API
-- Gamepad API
+```text
+HTML5
+CSS3
+JavaScript ES6+
+Canvas 2D
+Web Audio API
+Gamepad API
+LocalStorage API
+Fullscreen API
+```
 
-Nenhum framework ou instalação de dependência é necessária.
+Sem framework obrigatório e sem build step.
 
-## Licença
+---
 
-MIT.
+## 🧪 Ferramentas para desenvolvimento
 
+Ative durante a luta:
 
-## Referências técnicas
+```text
+F2
+```
 
-A arquitetura do combate foi inspirada em conceitos apresentados no tutorial **JavaScript Fighting Game Tutorial with HTML Canvas**, de Chris Courses, e em seu repositório público `chriscourses/fighting-game`.
+para visualizar as colisões.
 
-Foram reaproveitados conceitos gerais de desenvolvimento de jogos — sprites por estado, caixas de ataque, colisão retangular, gravidade e atualização via `requestAnimationFrame` — mas a implementação, os seis personagens, sprites, interface, golpes, sistemas de mana/stamina/especial, IA e finalizações do NEON CLASH são próprios.
+Isso facilita o balanceamento de:
 
-- Vídeo: https://youtu.be/vyqbNFMDRGQ
-- Referência: https://github.com/chriscourses/fighting-game
+- alcance;
+- tamanho da hurtbox;
+- active frames;
+- distância de golpes;
+- especiais.
+
+---
+
+## 💾 Dados salvos localmente
+
+O jogo armazena no navegador:
+
+```text
+neonClashSettings
+neonClashSurvivalRecord
+neonClashArcadeClears
+```
+
+Nenhum banco de dados é necessário.
+
+---
+
+## 🗺️ Roadmap
+
+- [x] 8 lutadores
+- [x] pixel-art title screen
+- [x] menu principal
+- [x] Modo Arena
+- [x] Modo Treino
+- [x] Versus
+- [x] Survival
+- [x] gamepad
+- [x] finalizações
+- [x] hitbox debug
+- [x] configurações persistentes
+- [x] tela cheia
+- [ ] seleção de skins
+- [ ] golpes agarrão
+- [ ] crouch attacks
+- [ ] air combos avançados
+- [ ] command list dentro do pause
+- [ ] achievements
+- [ ] chefes secretos
+- [ ] ranking local
+- [ ] replay system
+- [ ] multiplayer online
+- [ ] versão PWA instalável
+
+---
+
+## 📚 Referências técnicas
+
+O motor utiliza conceitos comuns de jogos de luta 2D e foi estudado também a partir do projeto educacional de Chris Courses:
+
+- `JavaScript Fighting Game Tutorial with HTML Canvas`
+- `chriscourses/fighting-game`
+
+Foram utilizados conceitos gerais como:
+
+- `requestAnimationFrame`;
+- classes de sprites;
+- estados de animação;
+- gravidade;
+- attack boxes;
+- colisão retangular.
+
+Os personagens, sistema de mana/stamina/especial, modos de jogo, interface, identidade visual, finalizações, IA, sprites e implementação do **NEON CLASH** são próprios.
+
+---
+
+## 📄 Licença
+
+Distribuído sob a licença **MIT**.
+
+---
+
+<div align="center">
+
+<img src="./assets/ui/neon_clash_logo_pixel.png" alt="NEON CLASH" width="520">
+
+**PRESS START. ENTER THE CLASH.**
+
+</div>

@@ -370,5 +370,191 @@
       "frameHeight": 300,
       "file": "assets/fighters/morvane/fall.png"
     }
+  },
+  "orion": {
+    "idle": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/orion/idle.png"
+    },
+    "walk": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/orion/walk.png"
+    },
+    "jump": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/orion/jump.png"
+    },
+    "fall": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/orion/fall.png"
+    },
+    "punch": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/orion/punch.png"
+    },
+    "kick": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/orion/kick.png"
+    },
+    "hurt": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/orion/hurt.png"
+    },
+    "ko": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/orion/ko.png"
+    },
+    "special": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/orion/special.png"
+    },
+    "finisher": {
+      "frames": 7,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/orion/finisher.png"
+    }
+  },
+  "sable": {
+    "idle": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/sable/idle.png"
+    },
+    "walk": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/sable/walk.png"
+    },
+    "jump": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/sable/jump.png"
+    },
+    "fall": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/sable/fall.png"
+    },
+    "punch": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/sable/punch.png"
+    },
+    "kick": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/sable/kick.png"
+    },
+    "hurt": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/sable/hurt.png"
+    },
+    "ko": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/sable/ko.png"
+    },
+    "special": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/sable/special.png"
+    },
+    "finisher": {
+      "frames": 7,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/sable/finisher.png"
+    }
+  },
+  "dummy": {
+    "idle": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/dummy/idle.png"
+    },
+    "walk": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/dummy/walk.png"
+    },
+    "jump": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/dummy/jump.png"
+    },
+    "fall": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/dummy/fall.png"
+    },
+    "punch": {
+      "frames": 4,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/dummy/punch.png"
+    },
+    "kick": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/dummy/kick.png"
+    },
+    "hurt": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/dummy/hurt.png"
+    },
+    "ko": {
+      "frames": 5,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/dummy/ko.png"
+    },
+    "special": {
+      "frames": 6,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/dummy/special.png"
+    },
+    "finisher": {
+      "frames": 7,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/dummy/finisher.png"
+    }
   }
 }

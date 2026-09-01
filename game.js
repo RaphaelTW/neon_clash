@@ -10,11 +10,15 @@ const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = true;
 
 const DOM = {
-  select: $("select-screen"), fight: $("fight-screen"), intro: $("intro-overlay"),
-  roster: $("roster"), p1Preview: $("preview-p1"), p2Preview: $("preview-p2"),
+  title:$("title-screen"),menu:$("menu-screen"),options:$("options-screen"),controls:$("controls-screen"),
+  select:$("select-screen"),fight:$("fight-screen"),
+  roster:$("roster"),p1Preview:$("preview-p1"),p2Preview:$("preview-p2"),
   p1Name:$("p1-name"),p1Title:$("p1-title"),p1Bio:$("p1-bio"),p1Stats:$("p1-stats"),p1Special:$("p1-special-name"),
   p2Name:$("p2-name"),p2Title:$("p2-title"),p2Bio:$("p2-bio"),p2Stats:$("p2-stats"),p2Special:$("p2-special-name"),
-  p2Slot:$("p2-slot-label"),difficultyWrap:$("difficulty-wrap"),
+  p2Slot:$("p2-slot-label"),difficultyWrap:$("difficulty-wrap"),roundsWrap:$("rounds-wrap"),
+  versusModeSwitch:$("versus-mode-switch"),selectKicker:$("select-kicker"),selectTitle:$("select-title"),
+  modeDescription:$("mode-description"),fightBtnLabel:$("fight-btn-label"),arcadeProgress:$("arcade-progress"),
+  arcadeRoute:$("arcade-route"),modeHud:$("mode-hud"),
   hudP1:$("hud-p1-name"),hudP2:$("hud-p2-name"),p1Health:$("p1-health"),p2Health:$("p2-health"),
   p1HealthText:$("p1-health-text"),p2HealthText:$("p2-health-text"),
   p1Mana:$("p1-mana"),p2Mana:$("p2-mana"),p1Stamina:$("p1-stamina"),p2Stamina:$("p2-stamina"),
@@ -23,8 +27,12 @@ const DOM = {
   announcement:$("announcement"),commandToast:$("command-toast"),
   comboP1:$("combo-p1"),comboP2:$("combo-p2"),
   pauseOverlay:$("pause-overlay"),resultOverlay:$("result-overlay"),
-  winnerText:$("winner-text"),winnerDetail:$("winner-detail"),
-  padP1:$("pad-p1"),padP2:$("pad-p2"),soundBtn:$("sound-btn"),debugBtn:$("debug-btn")
+  resultKicker:$("result-kicker"),winnerText:$("winner-text"),winnerDetail:$("winner-detail"),
+  resultExtra:$("result-extra"),rematchBtn:$("rematch-btn"),nextFightBtn:$("next-fight-btn"),
+  padP1:$("pad-p1"),padP2:$("pad-p2"),soundBtn:$("sound-btn"),debugBtn:$("debug-btn"),
+  menuPadStatus:$("menu-pad-status"),menuHighscore:$("menu-highscore"),
+  optAudio:$("opt-audio"),optVolume:$("opt-volume"),optShake:$("opt-shake"),
+  optCamera:$("opt-camera"),optHitbox:$("opt-hitbox"),optDifficulty:$("opt-difficulty")
 };
 
 const fighterDefs = [
@@ -69,8 +77,30 @@ const fighterDefs = [
     stats:{power:9,speed:6,defense:7,energy:9},
     special:"PACTO DE SANGUE", finisher:"TRONO CARMESIM",
     command:"ORBE HEMÁTICO", bio:"Feiticeiro de médio alcance. Rouba vida e cresce quando o combate se prolonga."
+  },
+  {
+    id:"orion", name:"ORION FROST", title:"O Herdeiro do Zero", style:"caster",
+    primary:"#52a7dd", secondary:"#e9fbff", accent:"#9ee9ff",
+    stats:{power:7,speed:7,defense:8,energy:10},
+    special:"INVERNO ABSOLUTO", finisher:"ZERO KELVIN",
+    command:"LANÇAS DE GELO", bio:"Criomante de controle. Congela o ritmo da luta com rajadas e chuva de gelo."
+  },
+  {
+    id:"sable", name:"SABLE HEX", title:"A Bruxa do Circuito", style:"assassin",
+    primary:"#8c5b20", secondary:"#ffd86a", accent:"#ffc94f",
+    stats:{power:8,speed:9,defense:5,energy:9},
+    special:"MALDIÇÃO BINÁRIA", finisher:"BLACKOUT HEX",
+    command:"PASSO MALDITO", bio:"Mistura teleporte e magia digital. Drena mana e pune adversários à distância."
   }
 ];
+
+const dummyDef={
+  id:"dummy",name:"DUMMY MK-I",title:"Boneco de Treino",style:"tank",
+  primary:"#887b64",secondary:"#d7c7a8",accent:"#e53d3d",
+  stats:{power:1,speed:1,defense:10,energy:1},
+  special:"—",finisher:"—",command:"—",
+  bio:"Boneco parado para praticar hit confirm, combos, especiais e finalizações."
+};
 
 const animFrames = {idle:4,walk:6,jump:3,fall:3,punch:4,kick:5,hurt:3,ko:5,special:6,finisher:7};
 const animFPS = {idle:5,walk:10,jump:7,fall:7,punch:15,kick:13,hurt:10,ko:8,special:12,finisher:12};
@@ -83,12 +113,15 @@ const arenas = {
 };
 
 const state = {
-  screen:"select", mode:"cpu", pick:"p1", p1Index:0, p2Index:1, arena:"neon",
+  screen:"title", gameMode:"arcade", mode:"cpu", pick:"p1", p1Index:0, p2Index:1, arena:"neon",
   difficulty:"normal", winsNeeded:2, p1Wins:0, p2Wins:0, round:1,
   timer:99, timerAcc:0, running:false, paused:false, roundLock:true, roundEnding:false,
   projectiles:[],particles:[],afterImages:[],shake:0,flash:0,
   finisherWindow:null, finisherUsed:false, lastTime:0, aiClock:0, previewTime:0,
-  sound:true, cinematic:0, hitStop:0, debugHitboxes:false, cameraZoom:1
+  sound:true, volume:.70, screenShake:true, dynamicCamera:true,
+  cinematic:0,hitStop:0,debugHitboxes:false,cameraZoom:1,
+  menuIndex:0, arcade:{ladder:[],stage:0}, survivalScore:0, survivalHealth:100,
+  survivalLastOpponent:-1, trainingResetTimer:0
 };
 
 let P1=null,P2=null;
@@ -109,7 +142,7 @@ class SynthAudio {
     const o=this.ctx.createOscillator(),g=this.ctx.createGain();
     o.type=type;o.frequency.setValueAtTime(freq,this.ctx.currentTime);
     if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,freq+slide),this.ctx.currentTime+dur);
-    g.gain.setValueAtTime(gain,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+dur);
+    g.gain.setValueAtTime(gain*state.volume,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+dur);
     o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(this.ctx.currentTime+dur);
   }
   hit(power=1){this.tone(105+power*9,.055,"square",.035+power*.004,-50)}
@@ -123,7 +156,7 @@ const audio=new SynthAudio();
 
 function loadAssets(){
   const jobs=[];
-  fighterDefs.forEach(f=>{
+  [...fighterDefs,dummyDef].forEach(f=>{
     images[f.id]={};
     Object.keys(animFrames).forEach(anim=>{
       const img=new Image();
@@ -172,7 +205,12 @@ function buildRoster(){
     b.append(cv,sp);
     b.addEventListener("click",()=>{
       audio.select();
-      if(state.pick==="p1"){state.p1Index=i;state.pick="p2"} else {state.p2Index=i;state.pick="p1"}
+      if(state.gameMode==="versus"){
+        if(state.pick==="p1"){state.p1Index=i;state.pick="p2"}else{state.p2Index=i;state.pick="p1"}
+      }else{
+        state.p1Index=i;state.pick="p1";
+        if(state.gameMode==="arcade")state.arcade.ladder=[];
+      }
       updateSelectUI();
     });
     DOM.roster.appendChild(b);
@@ -191,19 +229,71 @@ function updateRosterThumbs(t){
 }
 
 function updateSelectUI(){
-  const a=fighterDefs[state.p1Index],b=fighterDefs[state.p2Index];
+  const a=fighterDefs[state.p1Index];
+  const b=state.gameMode==="training"?dummyDef:fighterDefs[state.p2Index];
   DOM.p1Name.textContent=a.name;DOM.p1Title.textContent=a.title;DOM.p1Bio.textContent=a.bio;DOM.p1Stats.innerHTML=statHTML(a);DOM.p1Special.textContent=a.special;
   DOM.p2Name.textContent=b.name;DOM.p2Title.textContent=b.title;DOM.p2Bio.textContent=b.bio;DOM.p2Stats.innerHTML=statHTML(b);DOM.p2Special.textContent=b.special;
   [...DOM.roster.children].forEach((el,i)=>{
     el.classList.toggle("p1-picked",i===state.p1Index);
-    el.classList.toggle("p2-picked",i===state.p2Index);
+    el.classList.toggle("p2-picked",state.gameMode==="versus"&&i===state.p2Index);
   });
+  updateRouteUI();
 }
 
 function switchScreen(name){
   state.screen=name;
-  DOM.select.classList.toggle("active",name==="select");
-  DOM.fight.classList.toggle("active",name==="fight");
+  [DOM.title,DOM.menu,DOM.options,DOM.controls,DOM.select,DOM.fight].forEach(el=>el&&el.classList.remove("active"));
+  const target={title:DOM.title,menu:DOM.menu,options:DOM.options,controls:DOM.controls,select:DOM.select,fight:DOM.fight}[name];
+  if(target)target.classList.add("active");
+  if(name==="menu")refreshMenuStatus();
+}
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+  return a;
+}
+function buildArcadeLadder(){
+  const others=fighterDefs.map((_,i)=>i).filter(i=>i!==state.p1Index);
+  state.arcade.ladder=[...shuffle(others),state.p1Index];
+  state.arcade.stage=0;
+  updateRouteUI();
+}
+function updateRouteUI(){
+  if(!DOM.arcadeRoute)return;
+  DOM.arcadeRoute.innerHTML="";
+  for(let i=0;i<8;i++){
+    const n=document.createElement("i");n.className="route-node";
+    if(i<state.arcade.stage)n.classList.add("done");
+    if(i===state.arcade.stage)n.classList.add("current");
+    DOM.arcadeRoute.appendChild(n);
+  }
+}
+function configureSelect(mode){
+  state.gameMode=mode;state.pick="p1";state.running=false;
+  DOM.versusModeSwitch.classList.toggle("hidden",mode!=="versus");
+  DOM.arcadeProgress.classList.toggle("hidden",mode!=="arcade");
+  DOM.roundsWrap.classList.toggle("hidden",mode!=="versus");
+  DOM.difficultyWrap.classList.toggle("hidden",mode==="training");
+  const cfg={
+    arcade:["ARENA // FIGHTER SELECT","ESCOLHA SEU <span>LUTADOR</span>","Derrote os outros sete lutadores e depois sua própria versão espelho.","INICIAR ROTA","CPU"],
+    training:["TRAINING // FIGHTER SELECT","ESCOLHA SEU <span>LUTADOR</span>","Treine livremente contra o DUMMY MK-I, sem limite de tempo.","ENTRAR NO TREINO","DUMMY"],
+    versus:["VERSUS // FIGHTER SELECT","ESCOLHA OS <span>LUTADORES</span>","Enfrente a CPU ou conecte um segundo jogador local.","FIGHT","CPU"],
+    survival:["SURVIVAL // FIGHTER SELECT","ESCOLHA SEU <span>LUTADOR</span>","Vença o máximo possível. A dificuldade cresce e a vida recupera parcialmente.","INICIAR SURVIVAL","CPU"]
+  }[mode];
+  DOM.selectKicker.textContent=cfg[0];DOM.selectTitle.innerHTML=cfg[1];DOM.modeDescription.textContent=cfg[2];DOM.fightBtnLabel.textContent=cfg[3];DOM.p2Slot.textContent=cfg[4];
+  if(mode!=="versus"){state.mode="cpu"}
+  if(mode==="training"){state.p2Index=2}
+  updateSelectUI();switchScreen("select");
+}
+function openMenu(){
+  state.running=false;state.paused=false;state.arcade.ladder=state.gameMode==="arcade"?state.arcade.ladder:[];
+  DOM.pauseOverlay.classList.add("hidden");DOM.resultOverlay.classList.add("hidden");switchScreen("menu");
+}
+function refreshMenuStatus(){
+  const pads=navigator.getGamepads?[...navigator.getGamepads()].filter(Boolean):[];
+  DOM.menuPadStatus.textContent=pads[0]?`GAMEPAD: ${shortPad(pads[0].id)} CONECTADO`:"GAMEPAD: NÃO DETECTADO";
+  DOM.menuHighscore.textContent=`SURVIVAL RECORD: ${Number(localStorage.getItem("neonClashSurvivalRecord")||0)}`;
 }
 
 function announce(text,finisher=false){
@@ -336,7 +426,7 @@ class Fighter {
     audio.power();
   }
   spawnPowerProjectile(command=false){
-    const cfg={
+    let cfg={
       brawler:{kind:"fire",speed:12.5,size:24,damage:command?17:13},
       assassin:{kind:"void",speed:16,size:18,damage:command?16:11},
       tank:{kind:"quake",speed:8,size:35,damage:command?20:16},
@@ -344,16 +434,31 @@ class Fighter {
       rush:{kind:"kinetic",speed:17,size:20,damage:command?16:12},
       drain:{kind:"blood",speed:10.5,size:28,damage:command?18:14,drain:true}
     }[this.def.style];
+    if(this.def.id==="orion")cfg={kind:"ice",speed:10.8,size:25,damage:command?18:13,freeze:true};
+    if(this.def.id==="sable")cfg={kind:"hex",speed:14.8,size:21,damage:command?17:12,manaDrain:true};
     state.projectiles.push({
       owner:this,x:this.x+this.facing*72,y:this.y-135,vx:this.facing*cfg.speed,vy:0,
       life:1300,size:cfg.size,damage:cfg.damage,kind:cfg.kind,color:this.def.accent,drain:cfg.drain||false,
-      command
+      freeze:cfg.freeze||false,manaDrain:cfg.manaDrain||false,command
     });
     burst(this.x+this.facing*70,this.y-135,this.def.accent,14,1.05);
   }
   commandMove(opponent){
     if(!this.canAct()||this.mana<34||this.cool.command>0)return;
     this.mana-=34;this.cool.command=820;toast(`${this.def.command}!`);audio.power();
+    if(this.def.id==="orion"){
+      this.animLocked=true;this.setAnim("special",true);
+      this.attack={anim:"special",duration:580,time:580,activeStart:-1,activeEnd:-1,hit:true,noMelee:true};
+      for(let i=-1;i<=1;i++)setTimeout(()=>{
+        if(state.running)state.projectiles.push({owner:this,x:this.x+this.facing*70,y:this.y-135+i*34,vx:this.facing*(10.5+Math.abs(i)),vy:i*.25,life:1250,size:21,damage:6.5,kind:"ice",color:this.def.accent,freeze:true,command:true});
+      },(i+1)*65);
+      return;
+    }
+    if(this.def.id==="sable"){
+      shadowImage(this);this.invuln=300;this.x=opponent.x-opponent.facing*118;this.facing=opponent.x>this.x?1:-1;
+      this.startAttack("special",500,155,335,20,14,{command:true,manaDrain:true,hitbox:{offsetX:20,offsetY:-190,w:200,h:135}});
+      burst(this.x,this.y-125,this.def.accent,30,1.5);return;
+    }
     switch(this.def.style){
       case "brawler":
         this.animLocked=true;this.setAnim("special",true);
@@ -387,7 +492,19 @@ class Fighter {
     this.super=0;this.cool.super=1600;this.invuln=550;this.animLocked=true;this.setAnim("special",true);
     announce(this.def.special);audio.super();state.flash=.35;state.cinematic=420;
     const style=this.def.style;
-    if(style==="caster"){
+    if(this.def.id==="orion"){
+      this.attack={anim:"special",duration:980,time:980,activeStart:-1,activeEnd:-1,hit:true,noMelee:true};
+      for(let i=0;i<9;i++)setTimeout(()=>{
+        if(!state.running)return;
+        const px=opponent.x+(i-4)*42;
+        state.projectiles.push({owner:this,x:px,y:105-(i%2)*55,vx:0,vy:18+(i%3),life:760,size:25,damage:4.6,kind:"ice",color:this.def.accent,freeze:true,super:true});
+      },i*60);
+    }else if(this.def.id==="sable"){
+      shadowImage(this);this.x=opponent.x-opponent.facing*125;this.facing=opponent.x>this.x?1:-1;
+      this.attack={anim:"special",duration:860,time:860,activeStart:280,activeEnd:620,damage:34,knock:12,hit:false,super:true,manaDrain:true,hitbox:{offsetX:15,offsetY:-205,w:270,h:155}};
+      for(let i=0;i<7;i++)setTimeout(()=>shadowImage(this),i*50);
+      opponent.mana=Math.max(0,opponent.mana-22);
+    }else if(style==="caster"){
       this.attack={anim:"special",duration:900,time:900,activeAt:-1,hit:true,noMelee:true};
       for(let i=0;i<7;i++)setTimeout(()=>{
         if(!state.running)return;
@@ -431,6 +548,8 @@ class Fighter {
     }
     this.health=Math.max(0,this.health-dmg);
     if(meta.drain)attacker.health=Math.min(100,attacker.health+dmg*.32);
+    if(meta.freeze&&!blocked){this.stun=Math.max(this.stun,560);burst(this.x,this.y-120,"#dff8ff",18,.8)}
+    if(meta.manaDrain){this.mana=Math.max(0,this.mana-18);attacker.mana=Math.min(100,attacker.mana+8)}
     this.vx=attacker.facing*knock;
     if((this.x<95&&this.vx<0)||(this.x>WORLD_W-95&&this.vx>0)){this.vx*=-.48;state.shake=Math.max(state.shake,11);burst(this.x,this.y-110,"#ffffff",12,1.0)}
     state.shake=Math.max(state.shake,Math.min(18,damage*.45));
@@ -467,7 +586,7 @@ class Fighter {
         const atk=this.getAttackBox(),hurt=opponent.getHurtBox();
         if(atk&&rectsOverlap(atk,hurt)){
           this.attack.hit=true;
-          opponent.receiveHit(this.attack.damage,this.attack.knock,this,{guardBreak:this.attack.guardBreak,drain:this.attack.drain});
+          opponent.receiveHit(this.attack.damage,this.attack.knock,this,{guardBreak:this.attack.guardBreak,drain:this.attack.drain,freeze:this.attack.freeze,manaDrain:this.attack.manaDrain});
         }
       }
       if(this.attack.time<=0){
@@ -506,9 +625,14 @@ class Fighter {
 }
 
 function handleDefeat(loser,attacker){
+  if(state.gameMode==="training"){
+    loser.health=100;loser.stun=350;loser.dead=false;loser.fatal=false;loser.vx=0;loser.vy=0;loser.y=FLOOR_Y;
+    loser.setAnim("hurt",true);toast("DUMMY RESET");return;
+  }
   if(state.roundEnding||state.finisherWindow)return;
   const attackerWins=attacker.side===1?state.p1Wins:state.p2Wins;
-  if(attackerWins+1>=state.winsNeeded){
+  const allowFinisher=state.gameMode==="versus"||(state.gameMode==="arcade"&&state.arcade.stage===7);
+  if(allowFinisher&&attackerWins+1>=state.winsNeeded){
     loser.health=1;loser.fatal=true;loser.stun=999999;loser.animLocked=true;loser.setAnim("hurt",true);
     loser.vx=0;state.finisherWindow={attacker,loser,remaining:6000};state.timerAcc=0;
     announce("FINALIZE!",true);toast("ESPECIAL para executar a finalização");audio.super();
@@ -533,21 +657,97 @@ function performFinisher(attacker,loser){
   setTimeout(()=>finishRound(attacker,true),1900);
 }
 
+function setResultUI({kicker="MATCH RESULT",title="",detail="",extra="",rematch=true,rematchLabel="REVANCHE",next=false,nextLabel="PRÓXIMA LUTA"}){
+  DOM.resultKicker.textContent=kicker;DOM.winnerText.textContent=title;DOM.winnerDetail.textContent=detail;DOM.resultExtra.innerHTML=extra;
+  DOM.rematchBtn.classList.toggle("hidden",!rematch);DOM.rematchBtn.textContent=rematchLabel;
+  DOM.nextFightBtn.classList.toggle("hidden",!next);DOM.nextFightBtn.textContent=nextLabel;
+  DOM.resultOverlay.classList.remove("hidden");
+}
+
 function finishRound(winner,finisher){
-  if(!winner)return;
+  if(!winner||state.gameMode==="training")return;
   if(winner.side===1)state.p1Wins++;else state.p2Wins++;
   updateHUD();
   const wonMatch=(winner.side===1?state.p1Wins:state.p2Wins)>=state.winsNeeded;
   if(wonMatch){
     state.running=false;
-    setTimeout(()=>{
-      DOM.winnerText.textContent=`${winner.def.name} VENCEU`;
-      DOM.winnerDetail.textContent=finisher?`${winner.def.finisher} encerrou o combate.`:`${winner.def.special} garantiu a vitória.`;
-      DOM.resultOverlay.classList.remove("hidden");
-    },450);
+    setTimeout(()=>handleMatchEnd(winner,finisher),430);
   }else{
     setTimeout(()=>resetRound(),700);
   }
+}
+
+function handleMatchEnd(winner,finisher){
+  if(state.gameMode==="arcade"){
+    if(winner.side===1){
+      state.arcade.stage++;
+      updateRouteUI();
+      if(state.arcade.stage>=8){
+        const clears=Number(localStorage.getItem("neonClashArcadeClears")||0)+1;
+        localStorage.setItem("neonClashArcadeClears",String(clears));
+        setResultUI({
+          kicker:"ARENA // GAME CLEAR",
+          title:"VOCÊ ZEROU O GAME!",
+          detail:`${P1.def.name} derrotou todos os oito desafios.`,
+          extra:`ROTA COMPLETA · 8/8<br>FINAL: ${finisher?P1.def.finisher:"VITÓRIA POR K.O."}<br>ZERADAS SALVAS: ${clears}`,
+          rematch:true,rematchLabel:"NOVA ROTA",next:false
+        });
+        state.resultAction="restartArcade";
+      }else{
+        const next=fighterDefs[state.arcade.ladder[state.arcade.stage]];
+        setResultUI({
+          kicker:`ARENA // STAGE ${state.arcade.stage} CLEAR`,
+          title:`${winner.def.name} VENCEU`,
+          detail:finisher?`${winner.def.finisher} encerrou a luta.`:`Próximo adversário: ${next.name}.`,
+          extra:`PROGRESSO ${state.arcade.stage}/8`,
+          rematch:false,next:true,nextLabel:`LUTA ${state.arcade.stage+1} · ${next.name}`
+        });
+        state.resultAction="nextArcade";
+      }
+    }else{
+      setResultUI({
+        kicker:"ARENA // GAME OVER",
+        title:"ROTA INTERROMPIDA",
+        detail:`Você chegou à luta ${state.arcade.stage+1} de 8.`,
+        extra:`ADVERSÁRIO: ${winner.def.name}<br>PROGRESSO: ${state.arcade.stage}/8`,
+        rematch:true,rematchLabel:"TENTAR ESTA LUTA",next:false
+      });
+      state.resultAction="retryArcade";
+    }
+    return;
+  }
+
+  if(state.gameMode==="survival"){
+    if(winner.side===1){
+      state.survivalScore++;
+      state.survivalHealth=Math.min(100,Math.max(18,P1.health)+22);
+      const best=Math.max(state.survivalScore,Number(localStorage.getItem("neonClashSurvivalRecord")||0));
+      localStorage.setItem("neonClashSurvivalRecord",String(best));
+      announce(`SURVIVAL ${state.survivalScore}`);
+      setTimeout(()=>startFight(false),760);
+    }else{
+      const best=Math.max(state.survivalScore,Number(localStorage.getItem("neonClashSurvivalRecord")||0));
+      localStorage.setItem("neonClashSurvivalRecord",String(best));
+      setResultUI({
+        kicker:"SURVIVAL // RESULT",
+        title:`${state.survivalScore} VITÓRIA${state.survivalScore===1?"":"S"}`,
+        detail:`Recorde: ${best}.`,
+        extra:`Continue tentando para superar sua sequência.`,
+        rematch:true,rematchLabel:"REINICIAR SURVIVAL",next:false
+      });
+      state.resultAction="restartSurvival";
+    }
+    return;
+  }
+
+  setResultUI({
+    kicker:"VERSUS // RESULT",
+    title:`${winner.def.name} VENCEU`,
+    detail:finisher?`${winner.def.finisher} encerrou o combate.`:`${winner.def.special} garantiu a vitória.`,
+    extra:"",
+    rematch:true,rematchLabel:"REVANCHE",next:false
+  });
+  state.resultAction="rematchVersus";
 }
 
 function resetRound(){
@@ -556,21 +756,58 @@ function resetRound(){
   setTimeout(()=>{if(state.screen==="fight"){announce("FIGHT!");state.roundLock=false}},850);
 }
 
-function startFight(rematch=false){
-  audio.ensure();
-  state.difficulty=$("difficulty").value;state.winsNeeded=parseInt($("rounds-select").value,10);
-  if(!rematch){state.p1Wins=0;state.p2Wins=0;state.round=1}
-  state.timer=99;state.timerAcc=0;state.running=true;state.paused=false;state.roundLock=true;state.roundEnding=false;state.finisherWindow=null;state.finisherUsed=false;
-  state.projectiles=[];state.particles=[];state.afterImages=[];state.aiClock=0;state.hitStop=0;state.cameraZoom=1;
-  P1=new Fighter(fighterDefs[state.p1Index],1);P2=new Fighter(fighterDefs[state.p2Index],2);
-  DOM.hudP1.textContent=P1.def.name;DOM.hudP2.textContent=P2.def.name;DOM.arenaLabel.textContent=arenas[state.arena].name;
-  DOM.resultOverlay.classList.add("hidden");DOM.pauseOverlay.classList.add("hidden");
-  switchScreen("fight");updateHUD();announce("ROUND 1");
-  setTimeout(()=>{if(state.screen==="fight"){announce("FIGHT!");state.roundLock=false}},850);
+function pickSurvivalOpponent(){
+  let pool=fighterDefs.map((_,i)=>i);
+  if(pool.length>1)pool=pool.filter(i=>i!==state.survivalLastOpponent);
+  const pick=pool[Math.floor(Math.random()*pool.length)];
+  state.survivalLastOpponent=pick;return pick;
 }
 
+function startFight(resetRun=true){
+  audio.ensure();
+  state.difficulty=$("difficulty").value||state.difficulty;
+  if(state.gameMode==="arcade"){
+    state.mode="cpu";
+    if(resetRun||!state.arcade.ladder.length)buildArcadeLadder();
+    state.p2Index=state.arcade.ladder[state.arcade.stage];
+    state.winsNeeded=2;
+    state.arena=["neon","temple","forge"][state.arcade.stage%3];
+  }else if(state.gameMode==="training"){
+    state.mode="cpu";state.winsNeeded=99;
+  }else if(state.gameMode==="survival"){
+    state.mode="cpu";state.winsNeeded=1;
+    if(resetRun){state.survivalScore=0;state.survivalHealth=100;state.survivalLastOpponent=-1}
+    state.p2Index=pickSurvivalOpponent();
+    state.arena=["neon","temple","forge"][Math.floor(Math.random()*3)];
+  }else{
+    state.winsNeeded=parseInt($("rounds-select").value,10);
+  }
+
+  state.p1Wins=0;state.p2Wins=0;state.round=1;
+  state.timer=99;state.timerAcc=0;state.running=true;state.paused=false;state.roundLock=true;state.roundEnding=false;state.finisherWindow=null;state.finisherUsed=false;
+  state.projectiles=[];state.particles=[];state.afterImages=[];state.aiClock=0;state.hitStop=0;state.cameraZoom=1;
+
+  P1=new Fighter(fighterDefs[state.p1Index],1);
+  if(state.gameMode==="survival")P1.health=state.survivalHealth;
+  P2=new Fighter(state.gameMode==="training"?dummyDef:fighterDefs[state.p2Index],2);
+
+  DOM.hudP1.textContent=P1.def.name;DOM.hudP2.textContent=P2.def.name;DOM.arenaLabel.textContent=arenas[state.arena].name;
+  DOM.resultOverlay.classList.add("hidden");DOM.pauseOverlay.classList.add("hidden");
+  switchScreen("fight");updateHUD();
+
+  if(state.gameMode==="training"){
+    state.roundLock=false;P1.mana=P1.stamina=P1.super=100;P2.mana=P2.stamina=100;
+    announce("TRAINING");toast("R = RESETAR POSIÇÕES");
+  }else{
+    const opener=state.gameMode==="arcade"?`STAGE ${state.arcade.stage+1}`:state.gameMode==="survival"?`SURVIVAL ${state.survivalScore+1}`:"ROUND 1";
+    announce(opener);
+    setTimeout(()=>{if(state.screen==="fight"){announce("FIGHT!");state.roundLock=false}},850);
+  }
+}
 function winsDots(n){
-  return Array.from({length:state.winsNeeded},(_,i)=>i<n?"●":"○").join(" ");
+  if(state.gameMode==="training"||state.gameMode==="survival")return "";
+  const count=Math.min(3,state.winsNeeded);
+  return Array.from({length:count},(_,i)=>i<n?"●":"○").join(" ");
 }
 function setWidth(el,v){el.style.width=`${Math.max(0,Math.min(100,v))}%`}
 function updateHUD(){
@@ -580,12 +817,20 @@ function updateHUD(){
   setWidth(DOM.p1Stamina,P1.stamina);setWidth(DOM.p2Stamina,P2.stamina);
   setWidth(DOM.p1Super,P1.super);setWidth(DOM.p2Super,P2.super);
   DOM.p1HealthText.textContent=Math.ceil(P1.health);DOM.p2HealthText.textContent=Math.ceil(P2.health);
-  DOM.timer.textContent=String(Math.max(0,Math.ceil(state.timer))).padStart(2,"0");
-  DOM.roundLabel.textContent=`ROUND ${state.round}`;
+
+  if(state.gameMode==="training"){
+    DOM.timer.textContent="∞";DOM.roundLabel.textContent="TRAINING";
+    DOM.modeHud.textContent="TREINO · R RESET · F2 HITBOX";
+  }else{
+    DOM.timer.textContent=String(Math.max(0,Math.ceil(state.timer))).padStart(2,"0");
+    DOM.roundLabel.textContent=`ROUND ${state.round}`;
+    if(state.gameMode==="arcade")DOM.modeHud.textContent=`MODO ARENA · LUTA ${state.arcade.stage+1}/8`;
+    else if(state.gameMode==="survival")DOM.modeHud.textContent=`SURVIVAL · VITÓRIAS ${state.survivalScore}`;
+    else DOM.modeHud.textContent=state.mode==="local"?"VERSUS · 2P LOCAL":"VERSUS · 1P VS CPU";
+  }
   DOM.p1Wins.textContent=winsDots(state.p1Wins);DOM.p2Wins.textContent=winsDots(state.p2Wins);
   DOM.comboP1.textContent=P1.combo>=2?`${P1.combo} HIT`:"";DOM.comboP2.textContent=P2.combo>=2?`${P2.combo} HIT`:"";
 }
-
 function drawArena(c,t){
   if(state.arena==="neon"){
     const g=c.createLinearGradient(0,0,0,WORLD_H);g.addColorStop(0,"#070822");g.addColorStop(.58,"#191052");g.addColorStop(1,"#060811");c.fillStyle=g;c.fillRect(0,0,WORLD_W,WORLD_H);
@@ -656,7 +901,7 @@ function updateProjectiles(dt){
     const target=p.owner===P1?P2:P1;
     const projectileBox={x:p.x-p.size,y:p.y-p.size,w:p.size*2,h:p.size*2};
     if(p.life>0&&!target.dead&&!target.fatal&&rectsOverlap(projectileBox,target.getHurtBox())){
-      target.receiveHit(p.damage,p.command?10:6,p.owner,{drain:p.drain});burst(p.x,p.y,p.color,18,1.3);return false;
+      target.receiveHit(p.damage,p.command?10:6,p.owner,{drain:p.drain,freeze:p.freeze,manaDrain:p.manaDrain});burst(p.x,p.y,p.color,18,1.3);return false;
     }
     return p.life>0&&p.x>-100&&p.x<1700&&p.y<1000;
   });
@@ -668,6 +913,13 @@ function drawProjectiles(c,t){
       c.lineWidth=9;c.beginPath();c.moveTo(0,-50);for(let y=-38;y<55;y+=13)c.lineTo((Math.random()-.5)*24,y);c.stroke();
     }else if(p.kind==="quake"){
       c.rotate(t*.008);c.beginPath();for(let i=0;i<8;i++){const a=i/8*TAU,r=p.size*(.72+Math.random()*.22),x=Math.cos(a)*r,y=Math.sin(a)*r;i?c.lineTo(x,y):c.moveTo(x,y)}c.closePath();c.fill();
+    }else if(p.kind==="ice"){
+      c.rotate(Math.PI/4);c.fillStyle="#dff8ff";c.fillRect(-p.size*.55,-p.size*.55,p.size*1.1,p.size*1.1);
+      c.strokeStyle=p.color;c.lineWidth=4;c.strokeRect(-p.size*.72,-p.size*.72,p.size*1.44,p.size*1.44);
+    }else if(p.kind==="hex"){
+      c.rotate(t*.006);c.strokeStyle=p.color;c.lineWidth=5;c.beginPath();
+      for(let i=0;i<6;i++){const a=i/6*TAU,x=Math.cos(a)*p.size,y=Math.sin(a)*p.size;i?c.lineTo(x,y):c.moveTo(x,y)}c.closePath();c.stroke();
+      c.beginPath();c.moveTo(-p.size,0);c.lineTo(p.size,0);c.moveTo(0,-p.size);c.lineTo(0,p.size);c.stroke();
     }else{
       const g=c.createRadialGradient(0,0,2,0,0,p.size*1.5);g.addColorStop(0,"#fff");g.addColorStop(.25,p.color);g.addColorStop(1,"rgba(0,0,0,0)");
       c.fillStyle=g;c.beginPath();c.arc(0,0,p.size*1.6,0,TAU);c.fill();
@@ -677,9 +929,9 @@ function drawProjectiles(c,t){
 }
 
 function drawFight(t){
-  const shakeX=(Math.random()-.5)*state.shake,shakeY=(Math.random()-.5)*state.shake;
+  const shakeX=state.screenShake?(Math.random()-.5)*state.shake:0,shakeY=state.screenShake?(Math.random()-.5)*state.shake:0;
   const dist=Math.abs(P1.x-P2.x);
-  const targetZoom=1+clamp((620-dist)/620,0,1)*.022+(state.cinematic>0?.018:0);
+  const targetZoom=state.dynamicCamera?(1+clamp((620-dist)/620,0,1)*.022+(state.cinematic>0?.018:0)):1;
   state.cameraZoom+=(targetZoom-state.cameraZoom)*.08;
   const focusX=clamp((P1.x+P2.x)/2,620,980),focusY=455;
   ctx.save();
@@ -737,20 +989,107 @@ function handleKeyboardHeld(){
   }
 }
 
+
+const menuItems=[...document.querySelectorAll(".menu-item")];
+
+function setMenuIndex(index){
+  state.menuIndex=(index+menuItems.length)%menuItems.length;
+  menuItems.forEach((item,i)=>item.classList.toggle("selected",i===state.menuIndex));
+}
+function activateMenuItem(item=menuItems[state.menuIndex]){
+  if(!item)return;
+  audio.select();
+  const gm=item.dataset.gameMode,screen=item.dataset.screen;
+  if(gm)configureSelect(gm);
+  else if(screen)switchScreen(screen);
+}
+menuItems.forEach((item,i)=>{
+  item.addEventListener("mouseenter",()=>setMenuIndex(i));
+  item.addEventListener("click",()=>{setMenuIndex(i);activateMenuItem(item)});
+});
+
+function trainingReset(){
+  if(state.gameMode!=="training"||!P1||!P2)return;
+  P1.x=420;P1.y=FLOOR_Y;P1.vx=P1.vy=0;P1.health=100;P1.mana=P1.stamina=P1.super=100;P1.stun=0;P1.attack=null;P1.animLocked=false;P1.setAnim("idle",true);
+  P2.x=1120;P2.y=FLOOR_Y;P2.vx=P2.vy=0;P2.health=100;P2.stun=0;P2.attack=null;P2.animLocked=false;P2.setAnim("idle",true);
+  state.projectiles=[];state.particles=[];state.afterImages=[];toast("POSIÇÕES RESETADAS");
+}
+
+function loadSettings(){
+  let saved={};
+  try{saved=JSON.parse(localStorage.getItem("neonClashSettings")||"{}")}catch{}
+  state.sound=saved.sound??true;
+  state.volume=saved.volume??.70;
+  state.screenShake=saved.screenShake??true;
+  state.dynamicCamera=saved.dynamicCamera??true;
+  state.debugHitboxes=saved.debugHitboxes??false;
+  state.difficulty=saved.difficulty??"normal";
+  syncOptionsUI();
+}
+function saveSettings(){
+  localStorage.setItem("neonClashSettings",JSON.stringify({
+    sound:state.sound,volume:state.volume,screenShake:state.screenShake,
+    dynamicCamera:state.dynamicCamera,debugHitboxes:state.debugHitboxes,difficulty:state.difficulty
+  }));
+  syncOptionsUI();
+}
+function syncOptionsUI(){
+  DOM.optAudio.checked=state.sound;DOM.optVolume.value=Math.round(state.volume*100);
+  DOM.optShake.checked=state.screenShake;DOM.optCamera.checked=state.dynamicCamera;DOM.optHitbox.checked=state.debugHitboxes;DOM.optDifficulty.value=state.difficulty;
+  $("difficulty").value=state.difficulty;
+  DOM.soundBtn.textContent=`SOM: ${state.sound?"ON":"OFF"}`;
+  DOM.debugBtn.classList.toggle("active",state.debugHitboxes);DOM.debugBtn.textContent=`HITBOX: ${state.debugHitboxes?"ON":"OFF"}`;
+}
+
+function toggleDebug(){
+  state.debugHitboxes=!state.debugHitboxes;saveSettings();
+  if(state.screen==="fight")toast(state.debugHitboxes?"HITBOX DEBUG ATIVO":"HITBOX DEBUG DESATIVADO");
+}
 window.addEventListener("keydown",e=>{
-  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code))e.preventDefault();
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].includes(e.code)&&["title","menu","select","fight"].includes(state.screen))e.preventDefault();
   if(e.repeat)return;
   keys[e.code]=true;
-  if(state.screen==="select"&&e.code==="Enter"){startFight();return}
-  if(e.code==="F2"&&state.screen==="fight"){
-    state.debugHitboxes=!state.debugHitboxes;
-    DOM.debugBtn.classList.toggle("active",state.debugHitboxes);
-    DOM.debugBtn.textContent=`HITBOX: ${state.debugHitboxes?"ON":"OFF"}`;
-    toast(state.debugHitboxes?"HITBOX DEBUG ATIVO":"HITBOX DEBUG DESATIVADO");
+
+  if(state.screen==="title"){
+    if(["Enter","Space"].includes(e.code)){audio.ensure();switchScreen("menu")}
     return;
   }
-  if(e.code==="Escape"&&state.screen==="fight"){togglePause();return}
-  if(!P1||state.screen!=="fight")return;
+  if(state.screen==="menu"){
+    if(e.code==="ArrowUp"||e.code==="KeyW"){setMenuIndex(state.menuIndex-1);audio.select()}
+    else if(e.code==="ArrowDown"||e.code==="KeyS"){setMenuIndex(state.menuIndex+1);audio.select()}
+    else if(e.code==="Enter"||e.code==="Space")activateMenuItem();
+    else if(e.code==="Escape")switchScreen("title");
+    return;
+  }
+  if(state.screen==="options"||state.screen==="controls"){
+    if(e.code==="Escape")switchScreen("menu");
+    return;
+  }
+  if(state.screen==="select"){
+    const selectingP2=state.gameMode==="versus"&&state.pick==="p2";
+    if(e.code==="ArrowLeft"||e.code==="KeyA"){
+      if(selectingP2)state.p2Index=(state.p2Index-1+fighterDefs.length)%fighterDefs.length;
+      else{state.p1Index=(state.p1Index-1+fighterDefs.length)%fighterDefs.length;if(state.gameMode==="arcade")state.arcade.ladder=[]}
+      audio.select();updateSelectUI();return;
+    }
+    if(e.code==="ArrowRight"||e.code==="KeyD"){
+      if(selectingP2)state.p2Index=(state.p2Index+1)%fighterDefs.length;
+      else{state.p1Index=(state.p1Index+1)%fighterDefs.length;if(state.gameMode==="arcade")state.arcade.ladder=[]}
+      audio.select();updateSelectUI();return;
+    }
+    if(e.code==="Space"&&state.gameMode==="versus"){
+      state.pick=state.pick==="p1"?"p2":"p1";toast(state.pick==="p2"?"SELECIONE PLAYER 2":"SELECIONE PLAYER 1");return;
+    }
+    if(e.code==="Enter"){startFight(true);return}
+    if(e.code==="Escape"){openMenu();return}
+    return;
+  }
+  if(state.screen!=="fight"||!P1)return;
+
+  if(e.code==="F2"){toggleDebug();return}
+  if(e.code==="KeyR"&&state.gameMode==="training"){trainingReset();return}
+  if(e.code==="Escape"){togglePause();return}
+
   const p1dir={KeyS:"down",KeyA:"left",KeyD:"right"}[e.code];
   if(p1dir)pushInput(1,directionalToken(P1,p1dir));
   const p2dir={ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right"}[e.code];
@@ -767,24 +1106,56 @@ function pollGamepads(){
   const live=[...pads].filter(Boolean);
   DOM.padP1.textContent=live[0]?`P1: ${shortPad(live[0].id)}`:"P1: TECLADO";
   DOM.padP2.textContent=live[1]?`P2: ${shortPad(live[1].id)}`:"P2: TECLADO";
+  if(DOM.menuPadStatus)DOM.menuPadStatus.textContent=live[0]?`GAMEPAD: ${shortPad(live[0].id)} CONECTADO`:"GAMEPAD: NÃO DETECTADO";
+
   live.slice(0,2).forEach((gp,idx)=>{
-    const side=idx+1;if(side===2&&state.mode!=="local")return;
-    const f=side===1?P1:P2;
-    if(!f||state.screen!=="fight")return;
+    const side=idx+1;
     const prev=gamepadPrev[gp.index]||{btn:[],dir:{}};
     const btn=gp.buttons.map(b=>b.pressed);
-    const left=gp.axes[0]<-.45||btn[14], right=gp.axes[0]>.45||btn[15], up=gp.axes[1]<-.55||btn[12], down=gp.axes[1]>.55||btn[13];
-    if(!state.paused&&!state.roundLock&&!state.roundEnding){
-      f.setBlock(!!btn[4]);
-      if(left)f.move(-1);if(right)f.move(1);
-      const dir={left,right,down};
-      for(const d of ["left","right","down"])if(dir[d]&&!prev.dir?.[d])pushInput(side,directionalToken(f,d));
-      if(up&&!prev.up)inputAction(side,"jump");
-      const map={0:"punch",1:"kick",2:"power",3:"special",5:"dash"};
-      Object.entries(map).forEach(([bi,act])=>{if(btn[bi]&&!prev.btn?.[bi])inputAction(side,act)});
+    const left=gp.axes[0]<-.45||btn[14],right=gp.axes[0]>.45||btn[15],up=gp.axes[1]<-.55||btn[12],down=gp.axes[1]>.55||btn[13];
+    const press=(i)=>btn[i]&&!prev.btn?.[i];
+
+    if(side===1&&state.screen==="title"){
+      if(press(0)||press(9)){audio.ensure();switchScreen("menu")}
+    }else if(side===1&&state.screen==="menu"){
+      if(up&&!prev.up){setMenuIndex(state.menuIndex-1);audio.select()}
+      if(down&&!prev.down){setMenuIndex(state.menuIndex+1);audio.select()}
+      if(press(0)||press(9))activateMenuItem();
+      if(press(1))switchScreen("title");
+    }else if(side===1&&(state.screen==="options"||state.screen==="controls")){
+      if(press(1)||press(9))switchScreen("menu");
+    }else if(side===1&&state.screen==="select"){
+      if(left&&!prev.left){
+        if(state.gameMode==="versus"&&state.pick==="p2")state.p2Index=(state.p2Index-1+fighterDefs.length)%fighterDefs.length;
+        else state.p1Index=(state.p1Index-1+fighterDefs.length)%fighterDefs.length;
+        audio.select();updateSelectUI();
+      }
+      if(right&&!prev.right){
+        if(state.gameMode==="versus"&&state.pick==="p2")state.p2Index=(state.p2Index+1)%fighterDefs.length;
+        else state.p1Index=(state.p1Index+1)%fighterDefs.length;
+        audio.select();updateSelectUI();
+      }
+      if(press(0)){
+        if(state.gameMode==="versus"){state.pick=state.pick==="p1"?"p2":"p1";toast(state.pick==="p2"?"SELECIONE PLAYER 2":"PLAYER 1 SELECIONADO")}
+        else startFight(true);
+      }
+      if(press(9))startFight(true);
+      if(press(1))openMenu();
+    }else if(state.screen==="fight"){
+      if(side===2&&state.mode!=="local"){gamepadPrev[gp.index]={btn,dir:{left,right,down},left,right,up,down};return}
+      const f=side===1?P1:P2;
+      if(f&&!state.paused&&!state.roundLock&&!state.roundEnding){
+        f.setBlock(!!btn[4]);
+        if(left)f.move(-1);if(right)f.move(1);
+        const dir={left,right,down};
+        for(const d of ["left","right","down"])if(dir[d]&&!prev[d])pushInput(side,directionalToken(f,d));
+        if(up&&!prev.up)inputAction(side,"jump");
+        const map={0:"punch",1:"kick",2:"power",3:"special",5:"dash"};
+        Object.entries(map).forEach(([bi,act])=>{if(btn[bi]&&!prev.btn?.[bi])inputAction(side,act)});
+      }
+      if(press(9))togglePause();
     }
-    if(btn[9]&&!prev.btn?.[9]&&state.screen==="fight")togglePause();
-    gamepadPrev[gp.index]={btn,dir:{left,right,down},up};
+    gamepadPrev[gp.index]={btn,left,right,up,down,dir:{left,right,down}};
   });
 }
 function shortPad(id){
@@ -794,9 +1165,17 @@ function shortPad(id){
 }
 
 function updateAI(dt){
-  if(state.mode!=="cpu"||state.paused||state.roundLock||state.roundEnding||P2.dead||P2.fatal)return;
+  if(state.mode!=="cpu"||state.gameMode==="training"||state.paused||state.roundLock||state.roundEnding||P2.dead||P2.fatal)return;
   state.aiClock-=dt;if(state.aiClock>0)return;
-  const cfg={easy:{tick:260,skill:.32},normal:{tick:165,skill:.56},hard:{tick:92,skill:.80}}[state.difficulty];
+  let cfg={easy:{tick:260,skill:.32},normal:{tick:165,skill:.56},hard:{tick:92,skill:.80}}[state.difficulty];
+  if(state.gameMode==="arcade"){
+    const boost=Math.min(.18,state.arcade.stage*.025);
+    cfg={tick:Math.max(80,cfg.tick-state.arcade.stage*8),skill:Math.min(.92,cfg.skill+boost)};
+  }
+  if(state.gameMode==="survival"){
+    const boost=Math.min(.28,state.survivalScore*.025);
+    cfg={tick:Math.max(68,cfg.tick-state.survivalScore*7),skill:Math.min(.96,cfg.skill+boost)};
+  }
   state.aiClock=cfg.tick+Math.random()*cfg.tick*.7;
   const dist=Math.abs(P1.x-P2.x),r=Math.random();P2.setBlock(false);
   if(P2.stun>0)return;
@@ -815,21 +1194,26 @@ function updateAI(dt){
 
 function updateGame(dt){
   if(state.paused||!state.running)return;
-  pollGamepads();
   if(state.hitStop>0){
     state.hitStop=Math.max(0,state.hitStop-dt);
     updateEffects(dt*.25);updateHUD();return;
   }
   handleKeyboardHeld();updateAI(dt);
   if(!state.roundLock&&!state.roundEnding){
-    P1.update(dt,P2);P2.update(dt,P1);resolvePushBoxes(P1,P2);updateProjectiles(dt);updateEffects(dt);
+    if(state.gameMode==="training"){
+      P1.mana=100;P1.stamina=100;P1.super=100;
+      P2.mana=100;P2.stamina=100;P2.blocking=false;
+    }
+    P1.update(dt,P2);P2.update(dt,P1);
+    if(state.gameMode==="training"){P2.vx=0;P2.x+=(1120-P2.x)*.08}
+    resolvePushBoxes(P1,P2);updateProjectiles(dt);updateEffects(dt);
     if(state.finisherWindow){
       state.finisherWindow.remaining-=dt;
       if(state.finisherWindow.remaining<=0){
         const {attacker,loser}=state.finisherWindow;state.finisherWindow=null;loser.health=0;loser.dead=true;loser.fatal=false;loser.setAnim("ko",true);
         state.roundEnding=true;announce("K.O.");setTimeout(()=>finishRound(attacker,false),1000);
       }
-    }else{
+    }else if(state.gameMode!=="training"){
       state.timerAcc+=dt;if(state.timerAcc>=1000){const sec=Math.floor(state.timerAcc/1000);state.timer-=sec;state.timerAcc-=sec*1000}
       if(state.timer<=0){
         state.timer=0;state.roundEnding=true;const winner=P1.health===P2.health?null:(P1.health>P2.health?P1:P2);
@@ -849,16 +1233,16 @@ function togglePause(){
 function gameLoop(t){
   requestAnimationFrame(gameLoop);
   const dt=Math.min(34,t-state.lastTime||16.666);state.lastTime=t;
+  pollGamepads();
   if(state.screen==="select"){
     state.previewTime=t;
     renderPreview(DOM.p1Preview,fighterDefs[state.p1Index],false,t);
-    renderPreview(DOM.p2Preview,fighterDefs[state.p2Index],true,t);
-    updateRosterThumbs(t);pollGamepads();
-  }else if(P1&&P2){
+    renderPreview(DOM.p2Preview,state.gameMode==="training"?dummyDef:fighterDefs[state.p2Index],true,t);
+    updateRosterThumbs(t);
+  }else if(state.screen==="fight"&&P1&&P2){
     updateGame(dt);drawFight(t);
   }
 }
-
 document.querySelectorAll(".mode-btn").forEach(btn=>btn.addEventListener("click",()=>{
   audio.select();document.querySelectorAll(".mode-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
   state.mode=btn.dataset.mode;DOM.p2Slot.textContent=state.mode==="cpu"?"CPU":"PLAYER 2";DOM.difficultyWrap.style.opacity=state.mode==="cpu"?"1":".35";
@@ -867,19 +1251,51 @@ document.querySelectorAll(".arena-card").forEach(btn=>btn.addEventListener("clic
   audio.select();document.querySelectorAll(".arena-card").forEach(b=>b.classList.remove("active"));btn.classList.add("active");state.arena=btn.dataset.arena;
 }));
 
-$("enter-game").addEventListener("click",()=>{audio.ensure();DOM.intro.classList.add("hidden")});
-window.addEventListener("keydown",e=>{if(e.code==="Enter"&&!DOM.intro.classList.contains("hidden")){e.preventDefault();e.stopImmediatePropagation();audio.ensure();DOM.intro.classList.add("hidden")}},{capture:true});
-$("fight-btn").addEventListener("click",()=>startFight(false));
+$("title-start-btn").addEventListener("click",()=>{audio.ensure();switchScreen("menu")});
+$("fight-btn").addEventListener("click",()=>startFight(true));
+$("select-back-btn").addEventListener("click",openMenu);
+document.querySelectorAll(".back-menu-btn").forEach(btn=>btn.addEventListener("click",()=>switchScreen("menu")));
+
 $("pause-btn").addEventListener("click",togglePause);
 $("resume-btn").addEventListener("click",togglePause);
-$("pause-select-btn").addEventListener("click",()=>{state.running=false;state.paused=false;DOM.pauseOverlay.classList.add("hidden");switchScreen("select")});
-$("rematch-btn").addEventListener("click",()=>startFight(false));
-$("result-select-btn").addEventListener("click",()=>{DOM.resultOverlay.classList.add("hidden");switchScreen("select")});
-$("debug-btn").addEventListener("click",()=>{
-  state.debugHitboxes=!state.debugHitboxes;DOM.debugBtn.classList.toggle("active",state.debugHitboxes);
-  DOM.debugBtn.textContent=`HITBOX: ${state.debugHitboxes?"ON":"OFF"}`;toast(state.debugHitboxes?"HITBOX DEBUG ATIVO":"HITBOX DEBUG DESATIVADO");
-});
-$("sound-btn").addEventListener("click",()=>{state.sound=!state.sound;DOM.soundBtn.textContent=`SOM: ${state.sound?"ON":"OFF"}`;if(state.sound)audio.select()});
+$("pause-select-btn").addEventListener("click",openMenu);
 
-loadAssets().then(()=>{buildRoster();updateSelectUI();requestAnimationFrame(gameLoop)});
+DOM.nextFightBtn.addEventListener("click",()=>{DOM.resultOverlay.classList.add("hidden");startFight(false)});
+DOM.rematchBtn.addEventListener("click",()=>{
+  DOM.resultOverlay.classList.add("hidden");
+  if(state.resultAction==="restartArcade"){state.arcade.ladder=[];startFight(true)}
+  else if(state.resultAction==="retryArcade")startFight(false);
+  else if(state.resultAction==="restartSurvival")startFight(true);
+  else startFight(true);
+});
+$("result-select-btn").addEventListener("click",openMenu);
+
+$("debug-btn").addEventListener("click",toggleDebug);
+$("sound-btn").addEventListener("click",()=>{state.sound=!state.sound;saveSettings();if(state.sound)audio.select()});
+
+DOM.optAudio.addEventListener("change",()=>{state.sound=DOM.optAudio.checked;saveSettings();if(state.sound)audio.select()});
+DOM.optVolume.addEventListener("input",()=>{state.volume=Number(DOM.optVolume.value)/100;saveSettings()});
+DOM.optShake.addEventListener("change",()=>{state.screenShake=DOM.optShake.checked;saveSettings()});
+DOM.optCamera.addEventListener("change",()=>{state.dynamicCamera=DOM.optCamera.checked;saveSettings()});
+DOM.optHitbox.addEventListener("change",()=>{state.debugHitboxes=DOM.optHitbox.checked;saveSettings()});
+DOM.optDifficulty.addEventListener("change",()=>{state.difficulty=DOM.optDifficulty.value;$("difficulty").value=state.difficulty;saveSettings()});
+$("difficulty").addEventListener("change",()=>{state.difficulty=$("difficulty").value;saveSettings()});
+
+$("fullscreen-btn").addEventListener("click",async()=>{
+  try{
+    if(!document.fullscreenElement)await document.documentElement.requestFullscreen();
+    else await document.exitFullscreen();
+  }catch{}
+});
+$("reset-options-btn").addEventListener("click",()=>{
+  state.sound=true;state.volume=.70;state.screenShake=true;state.dynamicCamera=true;state.debugHitboxes=false;state.difficulty="normal";
+  saveSettings();audio.select();
+});
+
+window.addEventListener("gamepadconnected",refreshMenuStatus);
+window.addEventListener("gamepaddisconnected",refreshMenuStatus);
+
+loadAssets().then(()=>{
+  loadSettings();buildRoster();updateSelectUI();setMenuIndex(0);refreshMenuStatus();requestAnimationFrame(gameLoop);
+});
 })();
