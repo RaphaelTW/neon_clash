@@ -53,6 +53,12 @@
       "frameWidth": 240,
       "frameHeight": 300,
       "file": "assets/fighters/kael/finisher.png"
+    },
+    "fall": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/kael/fall.png"
     }
   },
   "nyx": {
@@ -109,6 +115,12 @@
       "frameWidth": 240,
       "frameHeight": 300,
       "file": "assets/fighters/nyx/finisher.png"
+    },
+    "fall": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/nyx/fall.png"
     }
   },
   "bront": {
@@ -165,6 +177,12 @@
       "frameWidth": 240,
       "frameHeight": 300,
       "file": "assets/fighters/bront/finisher.png"
+    },
+    "fall": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/bront/fall.png"
     }
   },
   "aiko": {
@@ -221,6 +239,12 @@
       "frameWidth": 240,
       "frameHeight": 300,
       "file": "assets/fighters/aiko/finisher.png"
+    },
+    "fall": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/aiko/fall.png"
     }
   },
   "volt": {
@@ -277,6 +301,12 @@
       "frameWidth": 240,
       "frameHeight": 300,
       "file": "assets/fighters/volt/finisher.png"
+    },
+    "fall": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/volt/fall.png"
     }
   },
   "morvane": {
@@ -333,6 +363,12 @@
       "frameWidth": 240,
       "frameHeight": 300,
       "file": "assets/fighters/morvane/finisher.png"
+    },
+    "fall": {
+      "frames": 3,
+      "frameWidth": 240,
+      "frameHeight": 300,
+      "file": "assets/fighters/morvane/fall.png"
     }
   }
 }

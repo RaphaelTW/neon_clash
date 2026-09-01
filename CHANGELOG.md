@@ -1,5 +1,20 @@
 # Changelog
 
+## v2.2.0 — Combat Core
+
+- adiciona hurtboxes independentes
+- adiciona pushboxes entre lutadores
+- adiciona attack boxes por golpe
+- implementa startup, active frames e recovery
+- adiciona hit-stop de impacto
+- melhora colisão dos projéteis
+- adiciona recoil próximo das paredes
+- adiciona câmera dinâmica de combate
+- adiciona animações de queda separadas
+- adiciona cenários com elementos animados
+- adiciona modo debug de colisão via F2
+- referencia conceitos técnicos do tutorial/repositório Chris Courses sem copiar assets
+
 ## v2.0.0 — Arcade Evolution
 
 - adiciona tela de abertura arcade

@@ -1,4 +1,4 @@
-# NEON CLASH v2
+# NEON CLASH v2.2 — Combat Core
 
 **NEON CLASH** é um jogo de luta 2D arcade para navegador, desenvolvido em HTML5 Canvas, CSS e JavaScript puro.
 
@@ -9,11 +9,12 @@ Não utiliza personagens, sprites ou propriedades intelectuais de jogos comercia
 - Tela de abertura estilo arcade
 - Seleção cinematográfica de personagem
 - 6 lutadores com visual próprio
-- 54 spritesheets PNG
+- 60 spritesheets PNG
 - 9 animações por lutador
   - idle
   - walk
   - jump
+  - fall
   - punch
   - kick
   - hurt
@@ -52,6 +53,30 @@ Não utiliza personagens, sprites ou propriedades intelectuais de jogos comercia
 - Sistema de finalização `FINALIZE!`
 - Finalização própria de cada personagem
 - Suporte a controles Xbox e PlayStation via Gamepad API
+
+
+## Combat Core v2.2
+
+A física e a detecção de golpes foram evoluídas para um modelo mais próximo de jogos de luta:
+
+- **Hurtbox** separada do sprite visual
+- **Pushbox** para impedir que os lutadores atravessem um ao outro
+- **Attack box** independente por golpe
+- Golpes divididos em **startup, active frames e recovery**
+- Colisão de projéteis contra hurtbox real
+- **Hit-stop** no momento do impacto
+- Wall recoil em golpes fortes próximos das extremidades
+- Câmera dinâmica conforme a distância entre os lutadores
+- Animações distintas de subida (`jump`) e queda (`fall`)
+- Cenários com elementos animados
+- Debug visual de colisões com `F2`
+
+No modo debug:
+
+- Verde = hurtbox
+- Azul = pushbox
+- Vermelho = attack box durante frames ativos
+
 
 ## Lutadores
 
@@ -198,3 +223,13 @@ Nenhum framework ou instalação de dependência é necessária.
 ## Licença
 
 MIT.
+
+
+## Referências técnicas
+
+A arquitetura do combate foi inspirada em conceitos apresentados no tutorial **JavaScript Fighting Game Tutorial with HTML Canvas**, de Chris Courses, e em seu repositório público `chriscourses/fighting-game`.
+
+Foram reaproveitados conceitos gerais de desenvolvimento de jogos — sprites por estado, caixas de ataque, colisão retangular, gravidade e atualização via `requestAnimationFrame` — mas a implementação, os seis personagens, sprites, interface, golpes, sistemas de mana/stamina/especial, IA e finalizações do NEON CLASH são próprios.
+
+- Vídeo: https://youtu.be/vyqbNFMDRGQ
+- Referência: https://github.com/chriscourses/fighting-game

@@ -234,3 +234,7 @@ button{cursor:pointer}
   .round-hud b{font-size:26px}.round-hud span{font-size:6px}.round-hud small{display:none}
   .health-frame{height:18px}.resource-row{gap:2px}.resource,.super{height:7px}
 }
+
+
+/* v2.2 combat diagnostics */
+#debug-btn.active{border-color:#ffcf52;color:#ffcf52;background:rgba(255,207,82,.08)}

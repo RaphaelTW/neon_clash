@@ -24,7 +24,7 @@ const DOM = {
   comboP1:$("combo-p1"),comboP2:$("combo-p2"),
   pauseOverlay:$("pause-overlay"),resultOverlay:$("result-overlay"),
   winnerText:$("winner-text"),winnerDetail:$("winner-detail"),
-  padP1:$("pad-p1"),padP2:$("pad-p2"),soundBtn:$("sound-btn")
+  padP1:$("pad-p1"),padP2:$("pad-p2"),soundBtn:$("sound-btn"),debugBtn:$("debug-btn")
 };
 
 const fighterDefs = [
@@ -72,8 +72,8 @@ const fighterDefs = [
   }
 ];
 
-const animFrames = {idle:4,walk:6,jump:3,punch:4,kick:5,hurt:3,ko:5,special:6,finisher:7};
-const animFPS = {idle:5,walk:10,jump:7,punch:15,kick:13,hurt:10,ko:8,special:12,finisher:12};
+const animFrames = {idle:4,walk:6,jump:3,fall:3,punch:4,kick:5,hurt:3,ko:5,special:6,finisher:7};
+const animFPS = {idle:5,walk:10,jump:7,fall:7,punch:15,kick:13,hurt:10,ko:8,special:12,finisher:12};
 const images = {};
 
 const arenas = {
@@ -88,7 +88,7 @@ const state = {
   timer:99, timerAcc:0, running:false, paused:false, roundLock:true, roundEnding:false,
   projectiles:[],particles:[],afterImages:[],shake:0,flash:0,
   finisherWindow:null, finisherUsed:false, lastTime:0, aiClock:0, previewTime:0,
-  sound:true, cinematic:0
+  sound:true, cinematic:0, hitStop:0, debugHitboxes:false, cameraZoom:1
 };
 
 let P1=null,P2=null;
@@ -233,6 +233,34 @@ function shadowImage(f){
   state.afterImages.push({def:f.def,anim:f.anim,frame:f.frame,x:f.x,y:f.y,flip:f.facing<0,life:180});
 }
 
+
+function rectsOverlap(a,b){
+  return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+function styleBodyWidth(style){
+  return {tank:92,brawler:72,assassin:62,caster:66,rush:68,drain:72}[style]||70;
+}
+function hitSpark(x,y,color,blocked=false){
+  burst(x,y,blocked?"#dce7ff":color,blocked?12:24,blocked?.8:1.7);
+  ring(x,y,blocked?"#91cfff":"#ffffff",blocked?14:22);
+  if(!blocked){
+    for(let i=0;i<5;i++){
+      state.particles.push({x,y,vx:(Math.random()-.5)*11,vy:(Math.random()-.5)*6,life:180+Math.random()*130,size:1.5+Math.random()*3,color:"#ffffff"});
+    }
+  }
+}
+function resolvePushBoxes(a,b){
+  if(!a||!b||a.dead||b.dead)return;
+  const A=a.getPushBox(),B=b.getPushBox();
+  if(!rectsOverlap(A,B))return;
+  const overlap=Math.min(A.x+A.w-B.x,B.x+B.w-A.x);
+  if(overlap<=0)return;
+  const push=overlap/2+.2;
+  if(a.x<b.x){a.x-=push;b.x+=push}else{a.x+=push;b.x-=push}
+  a.x=clamp(a.x,70,WORLD_W-70);b.x=clamp(b.x,70,WORLD_W-70);
+}
+
 class Fighter {
   constructor(def,side){
     this.def=def;this.side=side;
@@ -252,6 +280,23 @@ class Fighter {
     if(this.anim!==name){this.anim=name;this.frame=0;this.animTime=0}
   }
   canAct(){return !this.dead&&!this.fatal&&this.stun<=0&&!this.attack&&!this.animLocked}
+  getHurtBox(){
+    const w=styleBodyWidth(this.def.style);
+    const airLift=this.grounded?0:10;
+    return {x:this.x-w/2,y:this.y-205-airLift,w,h:188};
+  }
+  getPushBox(){
+    const w=styleBodyWidth(this.def.style)*.78;
+    return {x:this.x-w/2,y:this.y-160,w,h:158};
+  }
+  getAttackBox(){
+    if(!this.attack||this.attack.noMelee||this.attack.activeStart==null)return null;
+    const elapsed=this.attack.duration-this.attack.time;
+    if(elapsed<this.attack.activeStart||elapsed>this.attack.activeEnd)return null;
+    const hb=this.attack.hitbox||{offsetX:42,offsetY:-165,w:120,h:92};
+    const x=this.facing>0?this.x+hb.offsetX:this.x-hb.offsetX-hb.w;
+    return {x,y:this.y+hb.offsetY,w:hb.w,h:hb.h};
+  }
   move(dir){
     if(!this.canAct()||this.blocking)return;
     this.vx=dir*(4.7+this.def.stats.speed*.36);
@@ -272,14 +317,15 @@ class Fighter {
   }
   punch(){
     if(!this.canAct()||this.stamina<7)return;
-    this.stamina-=7;this.startAttack("punch",270,105,125,7+this.def.stats.power*.48,4.7);
+    this.stamina-=7;this.startAttack("punch",270,82,145,7+this.def.stats.power*.48,4.7,{hitbox:{offsetX:38,offsetY:-172,w:112,h:70}});
   }
   kick(){
     if(!this.canAct()||this.stamina<13)return;
-    this.stamina-=13;this.startAttack("kick",400,165,160,10+this.def.stats.power*.66,7.5);
+    this.stamina-=13;this.startAttack("kick",400,135,235,10+this.def.stats.power*.66,7.5,{hitbox:{offsetX:32,offsetY:-150,w:158,h:82}});
   }
-  startAttack(anim,duration,activeAt,range,damage,knock,meta={}){
-    this.blocking=false;this.attack={anim,duration,time:duration,activeAt,range,damage,knock,hit:false,...meta};
+  startAttack(anim,duration,activeStart,activeEnd,damage,knock,meta={}){
+    this.blocking=false;
+    this.attack={anim,duration,time:duration,activeStart,activeEnd,damage,knock,hit:false,...meta};
     this.animLocked=true;this.setAnim(anim,true);audio.whoosh();
   }
   power(){
@@ -315,9 +361,9 @@ class Fighter {
         setTimeout(()=>this.spawnPowerProjectile(true),150);break;
       case "assassin":
         shadowImage(this);this.invuln=260;this.x=opponent.x-opponent.facing*105;this.facing=opponent.x>this.x?1:-1;
-        this.startAttack("special",470,205,165,18,13,{command:true});burst(this.x,this.y-120,this.def.accent,24,1.4);break;
+        this.startAttack("special",470,160,315,18,13,{command:true,hitbox:{offsetX:28,offsetY:-185,w:185,h:125}});burst(this.x,this.y-120,this.def.accent,24,1.4);break;
       case "tank":
-        this.startAttack("special",610,290,310,21,18,{command:true,guardBreak:true});
+        this.startAttack("special",610,250,430,21,18,{command:true,guardBreak:true,hitbox:{offsetX:15,offsetY:-125,w:330,h:125}});
         for(let i=0;i<22;i++)state.particles.push({x:this.x+(Math.random()-.5)*420,y:FLOOR_Y-5,vx:(Math.random()-.5)*4,vy:-2-Math.random()*7,life:700,size:4+Math.random()*10,color:this.def.accent});
         state.shake=14;break;
       case "caster":
@@ -328,7 +374,7 @@ class Fighter {
         },i*80);break;
       case "rush":
         this.invuln=170;this.vx=this.facing*26;shadowImage(this);
-        this.startAttack("special",430,190,185,18,15,{command:true});break;
+        this.startAttack("special",430,135,310,18,15,{command:true,hitbox:{offsetX:10,offsetY:-180,w:210,h:125}});break;
       case "drain":
         this.animLocked=true;this.setAnim("special",true);
         this.attack={anim:"special",duration:520,time:520,activeAt:-1,hit:true,noMelee:true};
@@ -350,26 +396,28 @@ class Fighter {
       },i*70);
     }else if(style==="assassin"){
       shadowImage(this);this.x=opponent.x-opponent.facing*110;this.facing=opponent.x>this.x?1:-1;
-      this.attack={anim:"special",duration:780,time:780,activeAt:370,range:190,damage:31,knock:15,hit:false,super:true};
+      this.attack={anim:"special",duration:780,time:780,activeStart:300,activeEnd:540,damage:31,knock:15,hit:false,super:true,hitbox:{offsetX:25,offsetY:-190,w:215,h:135}};
       for(let i=0;i<5;i++)setTimeout(()=>shadowImage(this),i*60);
     }else if(style==="tank"){
-      this.attack={anim:"special",duration:900,time:900,activeAt:440,range:390,damage:35,knock:24,hit:false,super:true,guardBreak:true};
+      this.attack={anim:"special",duration:900,time:900,activeStart:360,activeEnd:650,damage:35,knock:24,hit:false,super:true,guardBreak:true,hitbox:{offsetX:10,offsetY:-145,w:420,h:145}};
       state.shake=22;
     }else if(style==="rush"){
-      this.vx=this.facing*29;this.attack={anim:"special",duration:720,time:720,activeAt:340,range:215,damage:32,knock:20,hit:false,super:true};
+      this.vx=this.facing*29;this.attack={anim:"special",duration:720,time:720,activeStart:250,activeEnd:510,damage:32,knock:20,hit:false,super:true,hitbox:{offsetX:5,offsetY:-190,w:245,h:140}};
       for(let i=0;i<7;i++)setTimeout(()=>shadowImage(this),i*55);
     }else if(style==="drain"){
-      this.attack={anim:"special",duration:820,time:820,activeAt:390,range:255,damage:33,knock:13,hit:false,super:true,drain:true};
+      this.attack={anim:"special",duration:820,time:820,activeStart:320,activeEnd:590,damage:33,knock:13,hit:false,super:true,drain:true,hitbox:{offsetX:20,offsetY:-200,w:275,h:150}};
     }else{
-      this.attack={anim:"special",duration:820,time:820,activeAt:400,range:255,damage:34,knock:20,hit:false,super:true};
+      this.attack={anim:"special",duration:820,time:820,activeStart:320,activeEnd:600,damage:34,knock:20,hit:false,super:true,hitbox:{offsetX:20,offsetY:-190,w:285,h:145}};
     }
     burst(this.x,this.y-130,this.def.accent,45,2.0);
   }
   receiveHit(damage,knock,attacker,meta={}){
-    if(this.invuln>0||this.dead||state.roundEnding)return;
+    if(this.invuln>0||this.dead||this.fatal||state.roundEnding)return;
     let dmg=damage;
-    if(this.blocking&&this.stamina>0&&!meta.guardBreak){
+    const blocked=this.blocking&&this.stamina>0&&!meta.guardBreak;
+    if(blocked){
       dmg*=.25;this.stamina=Math.max(0,this.stamina-damage*1.7);audio.hit(.5);
+      state.hitStop=Math.max(state.hitStop,42);hitSpark(this.x+attacker.facing*28,this.y-130,attacker.def.accent,true);
       if(this.stamina<=0){this.blocking=false;this.stun=620;toast("GUARD BREAK");state.shake=7}
     }else{
       this.blocking=false;this.stun=Math.min(700,145+damage*9);
@@ -378,11 +426,13 @@ class Fighter {
       attacker.super=Math.min(100,attacker.super+damage*1.65);
       this.super=Math.min(100,this.super+damage*1.2);
       audio.hit(Math.min(3,damage/8));
+      state.hitStop=Math.max(state.hitStop,Math.min(105,46+damage*2.2));
+      hitSpark(this.x+attacker.facing*20,this.y-130,attacker.def.accent,false);
     }
     this.health=Math.max(0,this.health-dmg);
     if(meta.drain)attacker.health=Math.min(100,attacker.health+dmg*.32);
     this.vx=attacker.facing*knock;
-    burst(this.x,this.y-130,attacker.def.accent,16,1.4);ring(this.x,this.y-130,"#ffffff",18);
+    if((this.x<95&&this.vx<0)||(this.x>WORLD_W-95&&this.vx>0)){this.vx*=-.48;state.shake=Math.max(state.shake,11);burst(this.x,this.y-110,"#ffffff",12,1.0)}
     state.shake=Math.max(state.shake,Math.min(18,damage*.45));
     if(this.health<=0)handleDefeat(this,attacker);
   }
@@ -398,23 +448,32 @@ class Fighter {
     this.mana=Math.min(100,this.mana+(0.013+this.def.stats.energy*.0014)*dt);
     this.stamina=Math.min(100,this.stamina+(this.blocking?.010:.024)*dt);
 
-    if(!this.grounded){this.vy+=.82*s;this.y+=this.vy*s;if(this.y>=FLOOR_Y){this.y=FLOOR_Y;this.vy=0;this.grounded=true;if(!this.attack&&!this.fatal)this.setAnim("idle",true)}}
+    if(!this.grounded){
+      this.vy+=.82*s;this.y+=this.vy*s;
+      if(!this.attack&&!this.fatal)this.setAnim(this.vy<0?"jump":"fall",true);
+      if(this.y>=FLOOR_Y){
+        const landedHard=this.vy>10;this.y=FLOOR_Y;this.vy=0;this.grounded=true;
+        if(landedHard)burst(this.x,FLOOR_Y-8,"#dbe7ff",8,.45);
+        if(!this.attack&&!this.fatal)this.setAnim("idle",true);
+      }
+    }
     this.x+=this.vx*s;this.vx*=Math.pow(.80,s);this.x=Math.max(70,Math.min(WORLD_W-70,this.x));
     if(!this.attack&&!this.fatal&&Math.abs(opponent.x-this.x)>8)this.facing=opponent.x>this.x?1:-1;
 
     if(this.attack){
       this.attack.time-=dt;
-      if(!this.attack.hit&&this.attack.activeAt>=0&&this.attack.time<=this.attack.duration-this.attack.activeAt){
-        this.attack.hit=true;
-        const dy=Math.abs((this.y-125)-(opponent.y-125));
-        if(Math.abs(opponent.x-this.x)<=this.attack.range+45&&dy<175){
+      const elapsed=this.attack.duration-this.attack.time;
+      if(!this.attack.hit && this.attack.activeStart>=0 && elapsed>=this.attack.activeStart && elapsed<=this.attack.activeEnd){
+        const atk=this.getAttackBox(),hurt=opponent.getHurtBox();
+        if(atk&&rectsOverlap(atk,hurt)){
+          this.attack.hit=true;
           opponent.receiveHit(this.attack.damage,this.attack.knock,this,{guardBreak:this.attack.guardBreak,drain:this.attack.drain});
         }
       }
       if(this.attack.time<=0){
         this.attack=null;this.animLocked=false;if(this.grounded&&!this.fatal)this.setAnim("idle",true);
       }
-    }else if(this.stun<=0&&this.animLocked&&!this.fatal){this.animLocked=false;this.setAnim(this.grounded?"idle":"jump",true)}
+    }else if(this.stun<=0&&this.animLocked&&!this.fatal){this.animLocked=false;this.setAnim(this.grounded?"idle":(this.vy<0?"jump":"fall"),true)}
     if(this.grounded&&!this.attack&&!this.blocking&&!this.animLocked&&Math.abs(this.vx)<.55&&!this.fatal)this.setAnim("idle");
     this.updateAnim(dt);
   }
@@ -435,6 +494,14 @@ class Fighter {
       c.save();c.strokeStyle=this.def.accent;c.globalAlpha=.28;c.lineWidth=3;c.beginPath();c.arc(this.x,this.y-135,88+Math.sin(performance.now()*.008)*5,0,TAU);c.stroke();c.restore();
     }
     drawSprite(c,this.def,this.anim,this.frame,this.x,this.y,this.facing<0,1,1);
+    if(state.debugHitboxes){
+      const hurt=this.getHurtBox(),push=this.getPushBox(),atk=this.getAttackBox();
+      c.save();c.lineWidth=2;
+      c.strokeStyle="#44ff78";c.strokeRect(hurt.x,hurt.y,hurt.w,hurt.h);
+      c.strokeStyle="#4ba3ff";c.strokeRect(push.x,push.y,push.w,push.h);
+      if(atk){c.strokeStyle="#ff405a";c.strokeRect(atk.x,atk.y,atk.w,atk.h)}
+      c.restore();
+    }
   }
 }
 
@@ -484,7 +551,7 @@ function finishRound(winner,finisher){
 }
 
 function resetRound(){
-  state.round++;state.timer=99;state.timerAcc=0;state.roundEnding=false;state.finisherWindow=null;state.projectiles=[];state.particles=[];state.afterImages=[];
+  state.round++;state.timer=99;state.timerAcc=0;state.roundEnding=false;state.finisherWindow=null;state.projectiles=[];state.particles=[];state.afterImages=[];state.hitStop=0;state.cameraZoom=1;
   P1.reset();P2.reset();state.roundLock=true;updateHUD();announce(`ROUND ${state.round}`);
   setTimeout(()=>{if(state.screen==="fight"){announce("FIGHT!");state.roundLock=false}},850);
 }
@@ -494,7 +561,7 @@ function startFight(rematch=false){
   state.difficulty=$("difficulty").value;state.winsNeeded=parseInt($("rounds-select").value,10);
   if(!rematch){state.p1Wins=0;state.p2Wins=0;state.round=1}
   state.timer=99;state.timerAcc=0;state.running=true;state.paused=false;state.roundLock=true;state.roundEnding=false;state.finisherWindow=null;state.finisherUsed=false;
-  state.projectiles=[];state.particles=[];state.afterImages=[];state.aiClock=0;
+  state.projectiles=[];state.particles=[];state.afterImages=[];state.aiClock=0;state.hitStop=0;state.cameraZoom=1;
   P1=new Fighter(fighterDefs[state.p1Index],1);P2=new Fighter(fighterDefs[state.p2Index],2);
   DOM.hudP1.textContent=P1.def.name;DOM.hudP2.textContent=P2.def.name;DOM.arenaLabel.textContent=arenas[state.arena].name;
   DOM.resultOverlay.classList.add("hidden");DOM.pauseOverlay.classList.add("hidden");
@@ -530,6 +597,12 @@ function drawArena(c,t){
     c.globalAlpha=1;
     c.fillStyle="rgba(255,61,149,.13)";c.beginPath();c.arc(WORLD_W*.5,230,125,0,TAU);c.fill();
     c.strokeStyle="rgba(255,61,149,.28)";c.lineWidth=3;for(let y=155;y<310;y+=20){c.beginPath();c.moveTo(675,y);c.lineTo(925,y);c.stroke()}
+    // animated hover traffic / signage
+    for(let i=0;i<4;i++){
+      const hx=(t*.09+i*430)%1900-150,hy=410+i%2*55;
+      c.fillStyle=i%2?"rgba(70,232,255,.50)":"rgba(255,61,149,.45)";
+      c.fillRect(hx,hy,48,4);c.fillRect(hx-24,hy+2,22,2);
+    }
     c.fillStyle="#070a13";c.fillRect(0,FLOOR_Y,WORLD_W,WORLD_H-FLOOR_Y);
     c.strokeStyle="rgba(70,232,255,.16)";c.lineWidth=1;
     for(let y=FLOOR_Y;y<WORLD_H;y+=32){c.beginPath();c.moveTo(0,y);c.lineTo(WORLD_W,y);c.stroke()}
@@ -540,12 +613,21 @@ function drawArena(c,t){
     c.globalAlpha=.5;c.fillStyle="#0e1526";
     for(let i=0;i<8;i++){let x=120+i*200;c.fillRect(x-14,330,28,390);c.fillRect(x-48,330,96,14)}
     c.globalAlpha=1;c.fillStyle="#080c16";c.beginPath();c.moveTo(0,610);for(let x=0;x<=WORLD_W;x+=100)c.lineTo(x,540-(x/100%2)*35);c.lineTo(WORLD_W,FLOOR_Y);c.lineTo(0,FLOOR_Y);c.fill();
+    for(let i=0;i<9;i++){
+      const lx=120+i*180,ly=500+Math.sin(t*.002+i)*7;
+      c.fillStyle="rgba(255,214,128,.55)";c.beginPath();c.arc(lx,ly,4,0,TAU);c.fill();
+    }
     c.fillStyle="#090a0f";c.fillRect(0,FLOOR_Y,WORLD_W,180);c.strokeStyle="rgba(120,150,255,.15)";
     for(let x=0;x<WORLD_W;x+=85){c.beginPath();c.moveTo(x,FLOOR_Y);c.lineTo(x+45,WORLD_H);c.stroke()}
   } else {
     const g=c.createLinearGradient(0,0,0,WORLD_H);g.addColorStop(0,"#170706");g.addColorStop(.57,"#3e110a");g.addColorStop(1,"#080605");c.fillStyle=g;c.fillRect(0,0,WORLD_W,WORLD_H);
     for(let i=0;i<25;i++){let x=(i*173+t*.035)%WORLD_W,y=130+(i*61)%390;c.fillStyle="rgba(255,110,35,.23)";c.beginPath();c.arc(x,y,2+i%5,0,TAU);c.fill()}
     c.fillStyle="#21100b";for(let i=0;i<7;i++){let x=i*270;c.fillRect(x-34,270,68,450);c.fillStyle="#ff6425";c.fillRect(x-26,345,52,6);c.fillStyle="#21100b"}
+    for(let i=0;i<5;i++){
+      const px=130+i*330,ph=36+Math.sin(t*.004+i)*18;
+      c.fillStyle="#2b1710";c.fillRect(px,430,52,180);
+      c.fillStyle="rgba(255,103,38,.75)";c.fillRect(px+8,500-ph,36,ph);
+    }
     c.fillStyle="#100a07";c.fillRect(0,FLOOR_Y,WORLD_W,180);c.fillStyle="#f0541e";c.fillRect(0,FLOOR_Y-6,WORLD_W,6);
     c.strokeStyle="rgba(255,110,35,.16)";for(let x=0;x<WORLD_W;x+=95){c.beginPath();c.moveTo(x,FLOOR_Y);c.lineTo(x-65,WORLD_H);c.stroke()}
   }
@@ -572,7 +654,8 @@ function updateProjectiles(dt){
   state.projectiles=state.projectiles.filter(p=>{
     p.life-=dt;p.x+=(p.vx||0)*dt/16.666;p.y+=(p.vy||0)*dt/16.666;
     const target=p.owner===P1?P2:P1;
-    if(p.life>0&&!target.dead&&!target.fatal&&Math.abs(p.x-target.x)<p.size+48&&Math.abs(p.y-(target.y-130))<p.size+105){
+    const projectileBox={x:p.x-p.size,y:p.y-p.size,w:p.size*2,h:p.size*2};
+    if(p.life>0&&!target.dead&&!target.fatal&&rectsOverlap(projectileBox,target.getHurtBox())){
       target.receiveHit(p.damage,p.command?10:6,p.owner,{drain:p.drain});burst(p.x,p.y,p.color,18,1.3);return false;
     }
     return p.life>0&&p.x>-100&&p.x<1700&&p.y<1000;
@@ -595,10 +678,22 @@ function drawProjectiles(c,t){
 
 function drawFight(t){
   const shakeX=(Math.random()-.5)*state.shake,shakeY=(Math.random()-.5)*state.shake;
-  const zoom=state.cinematic>0?1.018:1;
-  ctx.save();ctx.translate(WORLD_W/2+shakeX,WORLD_H/2+shakeY);ctx.scale(zoom,zoom);ctx.translate(-WORLD_W/2,-WORLD_H/2);
+  const dist=Math.abs(P1.x-P2.x);
+  const targetZoom=1+clamp((620-dist)/620,0,1)*.022+(state.cinematic>0?.018:0);
+  state.cameraZoom+=(targetZoom-state.cameraZoom)*.08;
+  const focusX=clamp((P1.x+P2.x)/2,620,980),focusY=455;
+  ctx.save();
+  ctx.translate(WORLD_W/2+shakeX,WORLD_H/2+shakeY);
+  ctx.scale(state.cameraZoom,state.cameraZoom);
+  ctx.translate(-focusX,-focusY);
   drawArena(ctx,t);drawEffects(ctx);drawProjectiles(ctx,t);P1.draw(ctx);P2.draw(ctx);
   ctx.restore();
+  if(state.debugHitboxes){
+    ctx.save();ctx.fillStyle="rgba(3,5,10,.72)";ctx.fillRect(18,810,355,66);
+    ctx.font="700 15px Rajdhani";ctx.fillStyle="#44ff78";ctx.fillText("VERDE: HURTBOX",32,834);
+    ctx.fillStyle="#4ba3ff";ctx.fillText("AZUL: PUSHBOX",32,854);
+    ctx.fillStyle="#ff405a";ctx.fillText("VERMELHO: ATTACK BOX (frames ativos)",155,834);ctx.restore();
+  }
   if(state.flash>0){ctx.fillStyle=`rgba(255,255,255,${Math.min(.55,state.flash)})`;ctx.fillRect(0,0,WORLD_W,WORLD_H)}
   state.shake*=.84;if(state.shake<.25)state.shake=0;
 }
@@ -647,6 +742,13 @@ window.addEventListener("keydown",e=>{
   if(e.repeat)return;
   keys[e.code]=true;
   if(state.screen==="select"&&e.code==="Enter"){startFight();return}
+  if(e.code==="F2"&&state.screen==="fight"){
+    state.debugHitboxes=!state.debugHitboxes;
+    DOM.debugBtn.classList.toggle("active",state.debugHitboxes);
+    DOM.debugBtn.textContent=`HITBOX: ${state.debugHitboxes?"ON":"OFF"}`;
+    toast(state.debugHitboxes?"HITBOX DEBUG ATIVO":"HITBOX DEBUG DESATIVADO");
+    return;
+  }
   if(e.code==="Escape"&&state.screen==="fight"){togglePause();return}
   if(!P1||state.screen!=="fight")return;
   const p1dir={KeyS:"down",KeyA:"left",KeyD:"right"}[e.code];
@@ -713,9 +815,14 @@ function updateAI(dt){
 
 function updateGame(dt){
   if(state.paused||!state.running)return;
-  pollGamepads();handleKeyboardHeld();updateAI(dt);
+  pollGamepads();
+  if(state.hitStop>0){
+    state.hitStop=Math.max(0,state.hitStop-dt);
+    updateEffects(dt*.25);updateHUD();return;
+  }
+  handleKeyboardHeld();updateAI(dt);
   if(!state.roundLock&&!state.roundEnding){
-    P1.update(dt,P2);P2.update(dt,P1);updateProjectiles(dt);updateEffects(dt);
+    P1.update(dt,P2);P2.update(dt,P1);resolvePushBoxes(P1,P2);updateProjectiles(dt);updateEffects(dt);
     if(state.finisherWindow){
       state.finisherWindow.remaining-=dt;
       if(state.finisherWindow.remaining<=0){
@@ -768,6 +875,10 @@ $("resume-btn").addEventListener("click",togglePause);
 $("pause-select-btn").addEventListener("click",()=>{state.running=false;state.paused=false;DOM.pauseOverlay.classList.add("hidden");switchScreen("select")});
 $("rematch-btn").addEventListener("click",()=>startFight(false));
 $("result-select-btn").addEventListener("click",()=>{DOM.resultOverlay.classList.add("hidden");switchScreen("select")});
+$("debug-btn").addEventListener("click",()=>{
+  state.debugHitboxes=!state.debugHitboxes;DOM.debugBtn.classList.toggle("active",state.debugHitboxes);
+  DOM.debugBtn.textContent=`HITBOX: ${state.debugHitboxes?"ON":"OFF"}`;toast(state.debugHitboxes?"HITBOX DEBUG ATIVO":"HITBOX DEBUG DESATIVADO");
+});
 $("sound-btn").addEventListener("click",()=>{state.sound=!state.sound;DOM.soundBtn.textContent=`SOM: ${state.sound?"ON":"OFF"}`;if(state.sound)audio.select()});
 
 loadAssets().then(()=>{buildRoster();updateSelectUI();requestAnimationFrame(gameLoop)});
