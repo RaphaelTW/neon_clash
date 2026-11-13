@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://raphaeltw.github.io/neon_clash/sitemap.xml

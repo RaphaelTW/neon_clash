@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.3.0 — SEO & Web Release
+
+- adiciona metadados de SEO em português para mecanismos de busca
+- adiciona preview para redes sociais (Open Graph e Twitter/X)
+- adiciona dados estruturados `VideoGame` para ajudar buscadores a identificar o jogo
+- adiciona `robots.txt` e sitemap para a versão hospedada no GitHub Pages
+- prepara a versão web distribuível para download via release
+
 ## v3.2.0 — Mobile & PWA
 
 - adiciona controles touchscreen completos para movimento, defesa, golpes, dash, poderes e especiais

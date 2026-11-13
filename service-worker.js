@@ -1,4 +1,4 @@
-const CACHE_NAME="neon-clash-v3-2-shell";
+const CACHE_NAME="neon-clash-v3-3-shell";
 const CORE=[
   "./","./index.html","./styles.css","./game.js","./manifest.webmanifest",
   "./favicon.ico","./logo.png","./assets/fighters.json",
